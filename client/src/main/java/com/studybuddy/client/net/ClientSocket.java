@@ -1,0 +1,91 @@
+package com.studybuddy.client.net;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.studybuddy.common.Packet;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+/**
+ * 서버와의 TCP 연결을 관리하고,
+ * JSON Packet 송수신을 담당하는 유틸리티 클래스.
+ */
+public class ClientSocket {
+    private Socket socket;
+    private BufferedReader in;
+    private PrintWriter out;
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    /** 수신된 Packet 을 처리할 리스너 목록 */
+    private final List<PacketListener> listeners = new CopyOnWriteArrayList<>();
+
+    /**
+     * 서버에 연결하고, 백그라운드에서 메시지 수신 루프를 돌린다.
+     *
+     * @param host 서버 호스트
+     * @param port 서버 포트
+     */
+    public void connect(String host, int port) throws IOException {
+        socket = new Socket(host, port);
+        in     = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out    = new PrintWriter(socket.getOutputStream(), true);
+
+        // 수신 루프를 별도 스레드로 실행
+        Thread recvThread = new Thread(this::receiveLoop, "ClientSocket-Receiver");
+        recvThread.setDaemon(true);
+        recvThread.start();
+    }
+
+    /**
+     * 서버로 Packet(JSON) 전송
+     */
+    public void sendPacket(Packet pkt) throws IOException {
+        String json = mapper.writeValueAsString(pkt);
+        out.println(json);
+    }
+
+    /**
+     * 서버로부터 들어오는 JSON 문자열을 Packet 으로 역직렬화하고
+     * 등록된 모든 리스너에 전달한다.
+     */
+    private void receiveLoop() {
+        String line;
+        try {
+            while ((line = in.readLine()) != null) {
+                Packet pkt = mapper.readValue(line, Packet.class);
+                for (PacketListener l : listeners) {
+                    l.onPacket(pkt);
+                }
+            }
+        } catch (IOException e) {
+            for (PacketListener l : listeners) {
+                l.onError(e);
+            }
+        }
+    }
+
+    /**
+     * PacketListener 등록.
+     * @param listener 새로 추가할 리스너
+     */
+    public void addListener(PacketListener listener) {
+        listeners.add(listener);
+    }
+
+    /** PacketListener 제거 */
+    public void removeListener(PacketListener listener) {
+        listeners.remove(listener);
+    }
+
+    /** 연결 종료 */
+    public void close() throws IOException {
+        if (socket != null && !socket.isClosed()) {
+            socket.close();
+        }
+    }
+}

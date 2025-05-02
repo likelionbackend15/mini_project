@@ -58,15 +58,15 @@ public class UserDAO {
             INSERT INTO users(username, hashed_pw, email)
             VALUES (?, ?, ?)
             """;
-        try (Connection conn = DbUtil.getConn();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        Connection conn = DbUtil.getConn();
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getHashedPw());
             ps.setString(3, user.getEmail());  // domain.User 에 email 필드가 있다고 가정
 
             ps.executeUpdate();
-
+            DbUtil.commit(conn);
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
                     long id = keys.getLong(1);
@@ -76,7 +76,14 @@ public class UserDAO {
                     throw new SQLException("Failed to retrieve generated user ID");
                 }
             }
+        }catch(Exception e){
+            DbUtil.rollback(conn);
+            e.printStackTrace();
+            throw new SQLException("Failed to retrieve generated user ID");
+        }finally{
+            DbUtil.close(conn);
         }
+
     }
 
     /**

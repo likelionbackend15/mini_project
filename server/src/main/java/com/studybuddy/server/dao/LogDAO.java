@@ -22,8 +22,8 @@ public class LogDAO {
               room_id, user_id, loop_idx, focus_sec, break_sec, ts
             ) VALUES (?, ?, ?, ?, ?, ?)
             """;
-        try (Connection conn = DbUtil.getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = DbUtil.getConn();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString   (1, log.getRoomId());
             ps.setLong     (2, log.getUserId());
@@ -32,6 +32,12 @@ public class LogDAO {
             ps.setInt      (5, log.getBreakSec());
             ps.setTimestamp(6, Timestamp.valueOf(log.getTs())); // ← ts 필드 저장
             ps.executeUpdate();
+            DbUtil.commit(conn);
+        }catch(Exception e){
+            DbUtil.rollback(conn);
+            e.printStackTrace();
+        }finally{
+            DbUtil.close(conn);
         }
     }
 
@@ -71,13 +77,19 @@ public class LogDAO {
             INSERT INTO chat_messages(room_id, sender, content)
             VALUES (?, ?, ?)
             """;
-        try (Connection conn = DbUtil.getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = DbUtil.getConn();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, msg.getRoomId());
             ps.setString(2, msg.getSender());
             ps.setString(3, msg.getContent());
             ps.executeUpdate();
+            DbUtil.commit(conn);
+        }catch(Exception e){
+            DbUtil.rollback(conn);
+            e.printStackTrace();
+        }finally{
+            DbUtil.close(conn);
         }
     }
 

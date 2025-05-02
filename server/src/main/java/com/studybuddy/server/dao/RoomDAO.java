@@ -32,8 +32,8 @@ public class RoomDAO {
               loops, password, status
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
-        try (Connection conn = DbUtil.getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = DbUtil.getConn();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, room.getRoomId());
             ps.setString(2, room.getName());
@@ -47,6 +47,12 @@ public class RoomDAO {
             ps.setString(10, room.getStatus().name());    // status 추가
 
             ps.executeUpdate();
+            DbUtil.commit(conn);
+        }catch(Exception e){
+            DbUtil.rollback(conn);
+            e.printStackTrace();
+        }finally{
+            DbUtil.close(conn);
         }
     }
 
@@ -93,8 +99,8 @@ public class RoomDAO {
                 password         = ?
             WHERE room_id = ?
             """;
-        try (Connection conn = DbUtil.getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = DbUtil.getConn();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, room.getMaxMembers());
             ps.setInt(2, room.getFocusMin());
@@ -105,7 +111,14 @@ public class RoomDAO {
             ps.setString(7, room.getRoomId());
 
             ps.executeUpdate();
+            DbUtil.commit(conn);
+        }catch(Exception e){
+            DbUtil.rollback(conn);
+            e.printStackTrace();
+        }finally{
+            DbUtil.close(conn);
         }
+
     }
 
     /**
@@ -113,14 +126,21 @@ public class RoomDAO {
      */
     public void updateStatus(String roomId, RoomStatus status) throws SQLException {
         String sql = "UPDATE rooms SET status = ? WHERE room_id = ?";
-        try (Connection conn = DbUtil.getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = DbUtil.getConn();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, status.name());
             ps.setString(2, roomId);
 
             ps.executeUpdate();
+            DbUtil.commit(conn);
+        }catch(Exception e){
+            DbUtil.rollback(conn);
+            e.printStackTrace();
+        }finally{
+            DbUtil.close(conn);
         }
+
     }
 
     /**

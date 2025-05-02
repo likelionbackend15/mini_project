@@ -16,9 +16,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * JSON Packet 송수신을 담당하는 유틸리티 클래스.
  */
 public class ClientSocket {
-    private Socket socket;
-    private BufferedReader in;
-    private PrintWriter out;
+    private Socket socket; // 서버랑 통신할 소켓
+    private BufferedReader in; // 서버에서 들어오는 데이터 읽기
+    private PrintWriter out; // 서버로 데이터 보내기
     private final ObjectMapper mapper = new ObjectMapper();
 
     /** 수신된 Packet 을 처리할 리스너 목록 */
@@ -31,7 +31,7 @@ public class ClientSocket {
      * @param port 서버 포트
      */
     public void connect(String host, int port) throws IOException {
-        socket = new Socket(host, port);
+        socket = new Socket(host, port); // 서버에 연결
         in     = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out    = new PrintWriter(socket.getOutputStream(), true);
 
@@ -41,12 +41,28 @@ public class ClientSocket {
         recvThread.start();
     }
 
+    /** 연결 종료 */
+    public void disconnect() {
+        try {
+            if (socket != null && !socket.isClosed()) socket.close();
+            if (in != null) in.close();
+            if (out != null) out.close();
+        } catch (IOException e) {
+            notifyError(e);
+        }
+    }
+
     /**
      * 서버로 Packet(JSON) 전송
+     *
      */
     public void sendPacket(Packet pkt) throws IOException {
-        String json = mapper.writeValueAsString(pkt);
-        out.println(json);
+        try {
+            String json = mapper.writeValueAsString(pkt);
+            out.println(json);
+        } catch (IOException e) {
+            notifyError(e); // 리스너에 에러 전달
+        }
     }
 
     /**
@@ -57,17 +73,29 @@ public class ClientSocket {
         String line;
         try {
             while ((line = in.readLine()) != null) {
-                Packet pkt = mapper.readValue(line, Packet.class);
-                for (PacketListener l : listeners) {
-                    l.onPacket(pkt);
+                try {
+                    Packet pkt = mapper.readValue(line, Packet.class);
+                    for (PacketListener l : listeners) {
+                        l.onPacket(pkt);
+                    }
+                } catch (Exception ex) {
+                    notifyError(ex);
                 }
             }
         } catch (IOException e) {
-            for (PacketListener l : listeners) {
-                l.onError(e);
-            }
+            disconnect();
+            notifyError(e);
         }
     }
+
+    public PrintWriter getWriter() {
+        return out;
+    }
+
+    public Socket getSocket() {
+        return socket;
+    }
+
 
     /**
      * PacketListener 등록.
@@ -82,10 +110,12 @@ public class ClientSocket {
         listeners.remove(listener);
     }
 
-    /** 연결 종료 */
-    public void close() throws IOException {
-        if (socket != null && !socket.isClosed()) {
-            socket.close();
+
+    /* 내부 예외 발생 시 listener에게 에러 전달*/
+    private void notifyError(Exception e) {
+        for (PacketListener l : listeners) {
+            l.onError(e);
         }
     }
+
 }

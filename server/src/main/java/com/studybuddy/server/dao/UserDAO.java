@@ -59,6 +59,7 @@ public class UserDAO {
             VALUES (?, ?, ?)
             """;
         Connection conn = DbUtil.getConn();
+        conn.setAutoCommit(false);
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, user.getUsername());

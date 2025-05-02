@@ -23,6 +23,7 @@ public class LogDAO {
             ) VALUES (?, ?, ?, ?, ?, ?)
             """;
         Connection conn = DbUtil.getConn();
+        conn.setAutoCommit(false);
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString   (1, log.getRoomId());
@@ -78,6 +79,7 @@ public class LogDAO {
             VALUES (?, ?, ?)
             """;
         Connection conn = DbUtil.getConn();
+        conn.setAutoCommit(false);
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, msg.getRoomId());

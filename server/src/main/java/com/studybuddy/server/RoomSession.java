@@ -4,90 +4,98 @@ import com.studybuddy.common.Packet;
 import com.studybuddy.common.PacketType;
 import com.studybuddy.common.domain.Room;
 import com.studybuddy.common.domain.RoomStatus;
-import com.studybuddy.common.domain.TimerLog;
+import com.studybuddy.server.PomodoroTimer;
 import com.studybuddy.server.dao.LogDAO;
 import com.studybuddy.server.util.MessageBroadcaster;
 
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 한 방(스터디룸)의 runtime 세션.
- *   - 방 설정(meta), 접속 중인 클라이언트,
- *     타이머, 루프별 임시 TimerLog 보관 관리
+ * 한 스터디룸의 런타임 세션을 관리
+ *  • 방 정보(meta)
+ *  • 접속 중인 클라이언트 모음
+ *  • 타이머 제어(start/stop)
  */
 public class RoomSession {
 
-    /** 방 설정 메타 */
-    private Room meta;
-
-    /** 실시간 접속 중인 클라이언트 핸들러 모음 */
-    private final Set<ClientHandler> members = new CopyOnWriteArraySet<>();
-
-    /** 방 전용 타이머 사이클 관리 */
-    private final PomodoroTimer timer;
-
-    /** 루프별 사용자별 임시 타이머 기록 */
-    private final Map<Long, List<TimerLog>> localLogs = new ConcurrentHashMap<>();
+    private Room meta;                             // 방 설정 정보
+    private final Set<ClientHandler> members =     // 접속 중인 클라이언트 핸들러
+            new CopyOnWriteArraySet<>();
+    private final PomodoroTimer timer;             // 방 전용 뽀모도로 타이머
 
     public RoomSession(Room meta, LogDAO logDao) {
         this.meta = meta;
         this.timer = new PomodoroTimer(this, logDao);
     }
 
+    /** 현재 방 설정 조회 */
     public Room getMeta() {
         return meta;
     }
 
-    /** 모든 클라이언트에 비동기 브로드캐스트 */
-    public void broadcast(Packet pkt) {
-        MessageBroadcaster.pushAsync(this, pkt);
+    /** 클라이언트 입장 처리 */
+    public void addMember(ClientHandler ch) {
+        members.add(ch);
+
+    /* ───────── 입장 알림 ─────────
+       PacketType.USER_JOINED 가 enum에 없다면
+       시스템 채팅(CHAT)으로 대체해도 됩니다. */
+        if (ch.getUser() != null) {
+            String nick = ch.getUser().getUsername();
+            broadcast(new Packet(
+                    PacketType.CHAT,
+                    "{\"sender\":\"SYSTEM\",\"text\":\"" + nick + " 님이 입장했습니다.\"}"
+            ));
+        }
     }
 
-    /**
-     * RoomSession 에 참여된 클라이언트 목록을 반환
-     * MessageBroadcaster 에서 비동기 브로드캐스트할 때 사용
-     */
+    /** 클라이언트 퇴장 처리 */
+    public void removeMember(ClientHandler ch) {
+        members.remove(ch);
+
+        // 시스템 메시지로 퇴장 알림 전송
+        String nick = ch.getUser() != null ? ch.getUser().getUsername() : "알 수 없는 사용자";
+        String text = nick + "님이 퇴장했습니다.";
+
+        broadcast(new Packet(
+                PacketType.CHAT,
+                "{\"sender\":\"SYSTEM\",\"text\":\"" + text + "\"}"
+        ));
+    }
+
+    /** 접속 중인 클라이언트 목록 반환 (읽기 전용) */
     public Set<ClientHandler> getMembers() {
-        // 외부에서 이 Set을 건드리지 않도록 읽기 전용 래핑
         return Collections.unmodifiableSet(members);
     }
 
-    /** 한 명 입장 처리 */
-    public void addMember(ClientHandler ch) {
-        members.add(ch);
-        // 입장 알림 broadcast 가능
-    }
-
-    /** 한 명 퇴장 처리 */
-    public void removeMember(ClientHandler ch) {
-        members.remove(ch);
-        // 퇴장 알림 broadcast 가능
-    }
-
-    /** 방 설정 변경 시 meta 갱신 */
+    /** 설정이 변경되면 호출 */
     public void updateSettings(Room updated) {
         this.meta = updated;
     }
 
-    /** 설정 변경 잠금: UI 비활성화 등 */
+    /** 방 잠금 상태로 변경 */
     public void lock() {
         meta.setStatus(RoomStatus.OPEN_LOCKED);
     }
 
-    /** 집중 단계 시작 요청 */
+    /** 집중 단계 시작: 알림 후 타이머 실행 */
     public void startFocus() {
-        broadcast(new Packet(PacketType.TIMER_FOCUS_START, ""));
+        MessageBroadcaster.pushAsync(this,
+                new Packet(PacketType.TIMER_FOCUS_START, ""));
         timer.startFocus(meta.getFocusMin() * 60);
     }
 
-    /** 휴식 단계 시작 요청 */
+    /** 휴식 단계 시작: 알림 후 타이머 실행 */
     public void startBreak() {
-        broadcast(new Packet(PacketType.TIMER_BREAK_START, ""));
+        MessageBroadcaster.pushAsync(this,
+                new Packet(PacketType.TIMER_BREAK_START, ""));
         timer.startBreak(meta.getBreakMin() * 60);
+    }
+
+    /** 내부: 타이머가 보낼 패킷을 멤버들에게 전송 */
+    public void broadcast(Packet pkt) {
+        MessageBroadcaster.pushAsync(this, pkt);
     }
 }

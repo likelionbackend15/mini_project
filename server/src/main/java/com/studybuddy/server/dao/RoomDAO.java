@@ -33,6 +33,7 @@ public class RoomDAO {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         Connection conn = DbUtil.getConn();
+        conn.setAutoCommit(false);
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, room.getRoomId());
@@ -100,6 +101,7 @@ public class RoomDAO {
             WHERE room_id = ?
             """;
         Connection conn = DbUtil.getConn();
+        conn.setAutoCommit(false);
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, room.getMaxMembers());
@@ -127,6 +129,7 @@ public class RoomDAO {
     public void updateStatus(String roomId, RoomStatus status) throws SQLException {
         String sql = "UPDATE rooms SET status = ? WHERE room_id = ?";
         Connection conn = DbUtil.getConn();
+        conn.setAutoCommit(false);
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, status.name());

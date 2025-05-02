@@ -16,11 +16,11 @@ public class DbUtil {
      * application.properties나 classpath:db.properties 에 정의된
      * JDBC URL/사용자/비밀번호를 읽어 Connection 을 반환
      *
-     * Why?  
+     * Why?
      * - 커넥션 팩토리 역할을 분리하여 재사용성과 설정 관리를 편하게 하기 위함.
      */
     public static Connection getConn() throws SQLException {
-        try (InputStream in = DbUtil.class.getClassLoader().getResourceAsStream("db.properties")) {
+        try (InputStream in = DbUtil.class.getClassLoader().getResourceAsStream("server/src/main/resources/db.properties")) {
             Properties props = new Properties();
             props.load(in);
 
@@ -32,6 +32,33 @@ public class DbUtil {
 
         } catch (IOException e) {
             throw new SQLException("Failed to load database properties", e);
+        }
+    }
+
+    public static void close(AutoCloseable ac) {
+        try {
+            if (ac != null)
+                ac.close();
+        } catch (Exception e1) {
+            e1.printStackTrace();
+        }
+    }
+
+    public static void commit(Connection conn) {
+        try {
+            if (conn != null)
+                conn.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void rollback(Connection conn) {
+        try {
+            if (conn != null)
+                conn.rollback();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

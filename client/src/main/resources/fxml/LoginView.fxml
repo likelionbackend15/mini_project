@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<VBox xmlns="http://javafx.com/javafx/20"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.studybuddy.client.ui.LoginController"
+      spacing="10"
+      style="-fx-padding: 20;">
+
+    <TextField fx:id="usernameField"
+               promptText="Username"
+               prefWidth="200"/>
+
+    <PasswordField fx:id="passwordField"
+                   promptText="Password"
+                   prefWidth="200"/>
+
+    <Button fx:id="loginButton"
+            text="Login"
+            prefWidth="200"/>
+
+    <Text fx:id="errorText"
+          style="-fx-fill: red;"/>
+
+</VBox>

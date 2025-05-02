@@ -13,9 +13,13 @@ dependencies {
 
 javafx {
     version = "20.0.2"
-    modules = listOf("javafx.controls", "javafx.fxml")
+    modules = listOf(
+        "javafx.controls",
+        "javafx.fxml",
+        "javafx.media"
+    )
 }
 
 application {
-    mainClass.set("com.yourname.miniproject.client.MainApp")
+    mainClass.set("com.studybuddy.client.MainApp")
 }

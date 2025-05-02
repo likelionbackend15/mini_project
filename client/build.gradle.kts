@@ -22,11 +22,8 @@ javafx {
 
 application {
     mainClass.set("com.studybuddy.client.MainApp")
+    /** macOS 창이 안 뜨는 현상 방지 */
+    applicationDefaultJvmArgs = listOf("-XstartOnFirstThread")   // ★ 이 옵션이 run 태스크에 자동 전파됨
 }
 
-/*  ➤ macOS 첫-스레드 옵션 추가  */
-tasks.withType<JavaExec>().configureEach {
-    if (org.gradle.internal.os.OperatingSystem.current().isMacOsX) {
-        jvmArgs("-XstartOnFirstThread")
-    }
-}
+

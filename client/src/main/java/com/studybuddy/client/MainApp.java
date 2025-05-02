@@ -107,24 +107,40 @@ public class MainApp extends Application {
     /** FXML → 컨트롤러 초기화 → Scene 전환 */
     public void forwardTo(String fxml, Packet firstPkt) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+            /* 1) 자원 경로 확인 */
+            var url = getClass().getResource(fxml);
+            System.out.println("FXML URL = " + url);      // ★ null이면 경로 오류
+            if (url == null) {
+
+                showAlert("리소스 못 찾음", fxml + " 경로를 확인하세요");
+                return;
+                       }
+            /* 2) 로더 생성 */
+            FXMLLoader loader = new FXMLLoader(url);
             Scene scene = new Scene(loader.load());
 
             Object ctrl = loader.getController();
-            /* 공통 의존성 주입 (PrintWriter) */
-            ctrl.getClass().getMethod("setWriter", PrintWriter.class)
-                    .invoke(ctrl, out);
 
-            /* 컨트롤러가 PacketListener라면 MainApp에 등록 */
-            if (ctrl instanceof PacketListener pl)
-                addScreenListener(pl);
+            /* Login 화면이면 setApp() + setWriter() 모두 호출 */
+            if (ctrl instanceof com.studybuddy.client.ui.LoginController lc) {
+                lc.setApp(this);
+                lc.setWriter(out);
+            } else {
+                // 다른 화면들은 setWriter(out) 만
+                ctrl.getClass()
+                        .getMethod("setWriter", PrintWriter.class)
+                        .invoke(ctrl, out);
+            }
 
-            /* 첫 패킷 전달 (onPacket 존재할 때만) */
+            /* Listener 등록 */
+            if (ctrl instanceof PacketListener pl) addScreenListener(pl);
+
+            /* 첫 패킷 전달 */
             if (firstPkt != null) {
                 try {
                     ctrl.getClass().getMethod("onPacket", Packet.class)
                             .invoke(ctrl, firstPkt);
-                } catch (NoSuchMethodException ignored) { }
+                } catch (NoSuchMethodException ignore) {}
             }
 
             primaryStage.setScene(scene);
@@ -132,6 +148,7 @@ public class MainApp extends Application {
 
         } catch (Exception e) { e.printStackTrace(); }
     }
+
 
     /* 알림 */
     private void showAlert(String title, String msg) {

@@ -26,14 +26,8 @@ application {
     applicationDefaultJvmArgs = listOf("-XstartOnFirstThread")   // ★ 이 옵션이 run 태스크에 자동 전파됨
 }
 
-sourceSets {
-    main {
-        resources.srcDirs("src/main/resources")
-    }
-}
-
 tasks.withType<JavaExec>().configureEach {
-    val fxLib = "/Users/songchiho/Library/Java/JavaVirtualMachines/javafx-sdk-21.0.6/lib"
+    val fxLib = "/Library/Java/Mylib/javafx-sdk-21.0.6/lib"
     /*
     *                 위의 fx주소 꼭 각자 환경에 맞게 수정하시고 gradle reload 하세요!!!!!!!
     *

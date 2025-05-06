@@ -9,9 +9,13 @@ import com.studybuddy.common.dto.CreateRoomReq;
 import com.studybuddy.common.dto.RoomInfo;
 import com.studybuddy.common.dto.RoomStats; // ★ 통계 DTO (있다고 가정)
 import com.studybuddy.server.dao.UserDAO;
+import com.studybuddy.server.util.MailUtil;
+import jakarta.mail.MessagingException;
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import java.io.*;
 import java.net.Socket;
@@ -38,6 +42,10 @@ public class ClientHandler implements Runnable {
     private User        user;     // 로그인 성공 시 채워짐
     private RoomSession curRoom;  // 현재 들어가 있는 방
 
+    /* ===== 비밀번호 재설정용 인증 코드 ===== */
+    private record CodeInfo(String code, LocalDateTime expires) {}
+    private static final Map<String, CodeInfo> codes = new ConcurrentHashMap<>();
+
     public ClientHandler(Socket s, UserDAO uDao, RoomManager rMgr) {
         this.socket  = s;
         this.userDao = uDao;
@@ -52,22 +60,32 @@ public class ClientHandler implements Runnable {
 
             String line;
             while ((line = in.readLine()) != null) {
-                Packet pkt = mapper.readValue(line, Packet.class);
-                dispatch(pkt);
+                try {
+                    Packet pkt = mapper.readValue(line, Packet.class);
+                    dispatch(pkt);                 // ★ 실제 처리
+                } catch (Exception ex) {            // ← dispatch 내부 예외 잡기
+                    log.error("패킷 처리 실패", ex);   // ① 스택 출력
+                    sendError("Server error: " + ex.getMessage());
+                }
             }
-        } catch (IOException | SQLException e) {
-            log.info("연결 종료: {}", socket.getRemoteSocketAddress());
+        } catch (Exception e) {                    // 네트워크 오류 등
+            log.error("연결 종료(예외)", e);          // ② 스택 출력
         } finally {
             cleanup();
         }
     }
 
+
     /* ---------------- Packet 라우팅 ---------------- */
-    private void dispatch(Packet p) throws IOException, SQLException {
+    private void dispatch(Packet p) throws IOException, SQLException, MessagingException {
+        log.debug("recv={}", p.type());
+
         switch (p.type()) {
             /* 회원 */
             case SIGNUP              -> handleSignup(p);
             case LOGIN               -> handleLogin(p);
+            case SEND_CODE             -> handleSendCode(p);
+            case RESET_PASSWORD        -> handleResetPw(p);
 
             /* 로비 */
             case LIST_ROOMS          -> handleListRooms();
@@ -102,28 +120,41 @@ public class ClientHandler implements Runnable {
 
     /** 회원가입 */
     private void handleSignup(Packet p) throws IOException {
+        // JSON 문자열 → Tree
         var req = mapper.readTree(p.payloadJson());
-        String username = req.get("username").asText();
+
+        // payload 에 담긴 id, username, password, email, code 꺼내기
+        String id       = req.get("id").asText();        // 로그인 ID
+        String username = req.get("username").asText();  // 닉네임
         String pwPlain  = req.get("password").asText();
         String email    = req.get("email").asText(""); // 없으면 빈 문자열
+        String code     = req.get("code").asText();      // 인증 코드
 
         try {
-            if (userDao.existsByUsername(username)) {  // 중복 검사는 existsByUsername 사용
-                sendError("Username already exists");
+
+            /* 1) 중복 검사 */
+            if (userDao.existsById(id)) {          // ← PK 중복 체크
+                sendError("ID already exists");
                 return;
             }
-            String hash = BCrypt.hashpw(pwPlain, BCrypt.gensalt());
+            if (userDao.findByEmail(email).isPresent()) {
+                sendError("Email already used"); return; }
 
-            User u = new User(
-                    null,          // id는 DB에서 자동 생성
-                    username,
-                    hash,
-                    null,          // createdAt : INSERT 시 CURRENT_TIMESTAMP
-                    email
-            );
-            long id = userDao.save(u);   // DB INSERT
-            u.setId(id);                 // 메모리 객체에도 id 세팅
-            sendAck(mapper.writeValueAsString(u)); // 성공 응답으로 User JSON 보내기
+            /* 2) 코드 검증 */
+            CodeInfo info = codes.get(email);
+
+            if (info==null || !info.code.equals(code) ||
+                    LocalDateTime.now().isAfter(info.expires)) {
+                sendError("Code invalid or expired");
+                return;
+            }
+            codes.remove(email);   // 1회용
+
+            /* 3) 저장 */
+            String hash = BCrypt.hashpw(pwPlain, BCrypt.gensalt());
+            User u = new User(id, username, hash, null, email);
+            userDao.save(u);
+            sendAck("{\"action\":\"SIGNUP\"}"); // 성공 응답으로 User JSON 보내기
         } catch (Exception e) {
             sendError("Signup failed: " + e.getMessage());
         }
@@ -132,18 +163,84 @@ public class ClientHandler implements Runnable {
 
     /** 로그인 */
     private void handleLogin(Packet p) throws IOException, SQLException {
+        // JSON 문자열 → Tree
         var req = mapper.readTree(p.payloadJson());
-        String username = req.get("username").asText();
+
+        // payload 에 담긴 id, password 꺼내기
+        String id = req.get("id").asText();     // 로그인 ID
         String password = req.get("password").asText();
 
-        Optional<User> opt = userDao.findByUsername(username);
+        Optional<User> opt = userDao.findById(id);
         if (opt.isPresent() && BCrypt.checkpw(password, opt.get().getHashedPw())) {
             user = opt.get();
-            sendAck(mapper.writeValueAsString(user));
+            sendAck("{\"action\":\"LOGIN\", \"user\":" +
+                    mapper.writeValueAsString(user) + "}");
         } else {
             sendError("Invalid credentials");
         }
     }
+
+    /* 인증 코드 전송 */
+    private void handleSendCode(Packet p) throws IOException, SQLException {
+
+        String email = mapper.readTree(p.payloadJson()).get("email").asText();
+        log.debug("STEP-1  email={}", email);   // ① 도착 확인
+
+        if (userDao.findByEmail(email).isPresent()) {
+            log.debug("STEP-1a 중복 이메일");    // (중복이라면 여기까지만 찍힘)
+            sendError("Email already used");
+            return;
+        }
+
+        String code = String.format("%06d", (int)(Math.random()*1_000_000));
+        codes.put(email, new CodeInfo(code, LocalDateTime.now().plusMinutes(10)));
+        log.debug("STEP-2  code 생성={}", code); // ② 코드 생성까지 통과 ---------
+
+        try {
+            MailUtil.sendCode(email, code);          // 실제 메일
+            log.debug("STEP-3  MailUtil OK");      // ③ 메일 전송 성공 ----------
+        } catch (Exception ex) {                     // ★ SMTP 실패
+            log.warn("메일 전송 실패, 코드 = {}", code, ex);
+            // dev 모드에서는 메일 대신 콘솔 출력만으로도 충분
+        }
+
+        // 메일 성공/실패와 무관하게 ACK 전달하여 UI 피드백
+        sendAck("{\"action\":\"SEND_CODE\"}");
+        log.debug("STEP-4  ACK 보냄");            // ④ 최종 도달 -----------------
+    }
+
+
+    /* 비밀번호 재설정 */
+    private void handleResetPw(Packet p) throws IOException {
+        var j = mapper.readTree(p.payloadJson());
+        String email = j.get("email").asText();
+        String code  = j.get("code").asText();
+        String newPw = j.get("newPw").asText();
+
+        CodeInfo info = codes.get(email);
+        if (info == null || !info.code.equals(code) ||
+                LocalDateTime.now().isAfter(info.expires)) {
+            sendError("인증 코드가 잘못됐거나 만료되었습니다");
+            return;
+        }
+
+        String hash = BCrypt.hashpw(newPw, BCrypt.gensalt());
+        try {
+            userDao.findByEmail(email)
+                    .ifPresent(u -> {
+                        try {
+                            userDao.updatePassword(u.getId(), hash);  // id는 String
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+            codes.remove(email);
+            sendAck("{\"action\":\"RESET_OK\"}");
+        } catch (SQLException e) {
+            sendError("비밀번호 변경 실패");
+        }
+    }
+
 
     /* =================================================
        2) 로비 / 방
@@ -289,7 +386,10 @@ public class ClientHandler implements Runnable {
        6) 공통 응답
     ================================================= */
     private void sendAck(String body) { send(PacketType.ACK, body); }
-    private void sendError(String m)   { send(PacketType.ERROR, "{\"message\":\""+m+"\"}"); }
+    private void sendError(String m) {
+        log.warn("sendError → {}", m);             // ③ 서버 로그에도 남기기
+        send(PacketType.ERROR, "{\"message\":\""+m+"\"}");
+    }
 
     private void send(PacketType t, String body) {
         try { out.println(mapper.writeValueAsString(new Packet(t, body))); }

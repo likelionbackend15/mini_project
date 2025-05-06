@@ -9,6 +9,8 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
+import com.studybuddy.client.model.UserSession;
+import com.studybuddy.common.domain.User;
 
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -69,9 +71,14 @@ public class LoginController implements PacketListener {
         try {
             var node = mapper.readTree(pkt.payloadJson());
             if ("LOGIN".equals(node.get("action").asText())) {
-                Platform.runLater(() ->
-                        app.forwardTo("/fxml/LobbyView.fxml", pkt));
-            }
+                // 1) 서버가 보낸 user 객체 파싱
+                        User u = mapper.treeToValue(node.get("user"), User.class);
+                // 2) 전역 세션에 저장
+                        UserSession.getInstance().setUser(u);
+                // 3) 메인 스레드에서 로비로 화면 전환
+                        Platform.runLater(() ->
+                                app.forwardTo("/fxml/LobbyView.fxml", null));
+                           }
         } catch (Exception e) { e.printStackTrace(); }
     }
 

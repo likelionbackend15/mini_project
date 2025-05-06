@@ -20,7 +20,8 @@ public class DbUtil {
      * - 커넥션 팩토리 역할을 분리하여 재사용성과 설정 관리를 편하게 하기 위함.
      */
     public static Connection getConn() throws SQLException {
-        try (InputStream in = DbUtil.class.getClassLoader().getResourceAsStream("server/src/main/resources/db.properties")) {
+        try (InputStream in =
+                     DbUtil.class.getClassLoader().getResourceAsStream("db.properties")) { // ✔︎ 경로 간단히
             Properties props = new Properties();
             props.load(in);
 
@@ -28,12 +29,16 @@ public class DbUtil {
             String user = props.getProperty("jdbc.user");
             String pw   = props.getProperty("jdbc.password");
 
+            // 로깅으로 실제 연결되는 DB 확인
+            System.out.println("★ JDBC URL = " + url);
+
             return DriverManager.getConnection(url, user, pw);
 
         } catch (IOException e) {
             throw new SQLException("Failed to load database properties", e);
         }
     }
+
 
     public static void close(AutoCloseable ac) {
         try {

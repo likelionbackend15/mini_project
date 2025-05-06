@@ -1,5 +1,6 @@
 package com.studybuddy.client.net;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.studybuddy.common.Packet;
 
 /**
@@ -10,7 +11,7 @@ public interface PacketListener {
      * 서버로부터 정상적으로 수신된 Packet 을 처리.
      * @param packet 수신된 Packet
      */
-    void onPacket(Packet packet);
+    void onPacket(Packet packet) throws JsonProcessingException;
 
     /**
      * 수신 중 오류가 발생했을 때 호출.

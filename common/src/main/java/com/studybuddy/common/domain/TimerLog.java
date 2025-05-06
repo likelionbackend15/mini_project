@@ -8,13 +8,15 @@ import java.time.LocalDateTime;
 public class TimerLog {
     private Long logId;           // PK
     private String roomId;        // 방 ID
-    private Long userId;          // 사용자 ID
+    private String userId;        // 사용자 ID (String 타입으로 변경)
     private int loopIdx;          // 반복 인덱스
     private int focusSec;         // 실제 집중 시간(초)
     private int breakSec;         // 실제 휴식 시간(초)
     private LocalDateTime ts;     // 기록 시작 시각
 
-    public TimerLog(Long logId, String roomId, Long userId, int loopIdx, int focusSec, int breakSec, LocalDateTime ts) {
+    public TimerLog(Long logId, String roomId, String userId,
+                    int loopIdx, int focusSec, int breakSec,
+                    LocalDateTime ts) {
         this.logId = logId;
         this.roomId = roomId;
         this.userId = userId;
@@ -40,11 +42,11 @@ public class TimerLog {
         this.roomId = roomId;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 

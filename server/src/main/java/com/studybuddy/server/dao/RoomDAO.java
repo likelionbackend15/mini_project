@@ -38,7 +38,7 @@ public class RoomDAO {
 
             ps.setString(1, room.getRoomId());
             ps.setString(2, room.getName());
-            ps.setLong(3, room.getHostId());
+            ps.setString(3, room.getHostId());
             ps.setInt(4, room.getMaxMembers());
             ps.setBoolean(5, room.isAllowMidEntry());
             ps.setInt(6, room.getFocusMin());
@@ -181,7 +181,7 @@ public class RoomDAO {
                 rs.getInt("focus_min"),
                 rs.getInt("break_min"),
                 rs.getInt("loops"),
-                rs.getLong("host_id"),
+                rs.getString("host_id"),
                 rs.getString("password"),
                 RoomStatus.valueOf(rs.getString("status"))
         );

@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
  * 사용자 정보 도메인.
  */
 public class User {
-    private Long id;                  // PK
+    private String id;                  // PK
     private String username;          // 로그인 ID
     private String hashedPw;          // BCrypt 해시 비밀번호
     private LocalDateTime createdAt;
@@ -16,7 +16,7 @@ public class User {
     public User() {}
 
     // 전체 필드 생성자
-    public User(Long id, String username, String hashedPw, LocalDateTime createdAt, String email) {
+    public User(String id, String username, String hashedPw, LocalDateTime createdAt, String email) {
 
         this.id = id;
         this.username = username;
@@ -25,11 +25,11 @@ public class User {
         this.email = email;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

@@ -91,7 +91,7 @@ public class MainApp extends Application {
 
             switch (action) {
                 case "LOGIN"      -> forwardTo("/fxml/LobbyView.fxml", pkt);
-                case "SIGNUP"     -> {                         // ★ 수정-2
+                case "SIGNUP"     -> {            // 회원가입 완료
                     showAlert("회원가입 성공", "로그인 후 이용하세요");
                     forwardTo("/fxml/LoginView.fxml", pkt);
                 }
@@ -102,7 +102,11 @@ public class MainApp extends Application {
                         -> forwardTo("/fxml/LobbyView.fxml", pkt);
                 case "ROOM_STATS", "DOWNLOAD_CSV"
                         -> forwardTo("/fxml/StatsView.fxml", pkt);
-                default -> System.out.println("ACK(unknown): " + action);
+                default -> {
+                    // 여기로 오면 화면 전환이 필요 없는 ACK.
+                    if (currentListener != null)   // ★ 추가
+                        currentListener.onPacket(pkt);
+                }
             }
         } catch (Exception e) { e.printStackTrace(); }
     }
@@ -110,57 +114,53 @@ public class MainApp extends Application {
     /** FXML → 컨트롤러 초기화 → Scene 전환 */
     public void forwardTo(String fxml, Packet firstPkt) {
         try {
-            /* 1) 자원 경로 확인 */
             var url = getClass().getResource(fxml);
-            System.out.println("FXML URL = " + url);      // ★ null이면 경로 오류
             if (url == null) {
-
                 showAlert("리소스 못 찾음", fxml + " 경로를 확인하세요");
                 return;
-                       }
-            /* 2) 로더 생성 */
-            FXMLLoader loader = new FXMLLoader(url);
-            Scene scene = new Scene(loader.load());
-
-            Object ctrl = loader.getController();
-
-            // 1) 로그인 화면
-            if (ctrl instanceof com.studybuddy.client.ui.LoginController lc) {
-                lc.setApp(this);
-                lc.setWriter(out);
-
-                // 2) 회원가입 화면
-            } else if (ctrl instanceof com.studybuddy.client.ui.SignUpController sc) {
-                sc.setApp(this);
-                sc.setWriter(out);
-
-                // 3) 비밀번호 재설정 화면   ★ 여기를 추가
-            } else if (ctrl instanceof com.studybuddy.client.ui.ResetPasswordController rpc) {
-                rpc.setApp(this);
-                rpc.setWriter(out);
-
-                // 4) 그 외 컨트롤러 (예: Lobby, RoomCreate, ...)
-            } else {
-                ctrl.getClass()
-                        .getMethod("setWriter", PrintWriter.class)
-                        .invoke(ctrl, out);
             }
 
-            /* Listener 등록 */
-            if (ctrl instanceof PacketListener pl) addScreenListener(pl);
+            FXMLLoader loader = new FXMLLoader(url);
+            Scene scene = new Scene(loader.load());
+            Object ctrl = loader.getController();
 
-            /* 첫 패킷 전달 */
+            // --- 리플렉션 기반 자동 주입 시작 ---
+            for (var m : ctrl.getClass().getMethods()) {
+                // setWriter(PrintWriter)
+                if (m.getName().equals("setWriter")
+                        && m.getParameterCount() == 1
+                        && m.getParameterTypes()[0] == PrintWriter.class) {
+                    m.invoke(ctrl, out);
+                }
+                // setApp(MainApp)
+                if (m.getName().equals("setApp")
+                        && m.getParameterCount() == 1
+                        && m.getParameterTypes()[0] == MainApp.class) {
+                    m.invoke(ctrl, this);
+                }
+            }
+            // --- 자동 주입 끝 ---
+
+            // Listener로 등록
+            if (ctrl instanceof PacketListener pl) {
+                addScreenListener(pl);
+            }
+
+            // 첫 패킷 전달
             if (firstPkt != null) {
                 try {
-                    ctrl.getClass().getMethod("onPacket", Packet.class)
+                    ctrl.getClass()
+                            .getMethod("onPacket", Packet.class)
                             .invoke(ctrl, firstPkt);
-                } catch (NoSuchMethodException ignore) {}
+                } catch (NoSuchMethodException ignored) {}
             }
 
             primaryStage.setScene(scene);
             primaryStage.show();
 
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 

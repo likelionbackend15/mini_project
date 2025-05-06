@@ -27,7 +27,7 @@ public class LogDAO {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString   (1, log.getRoomId());
-            ps.setLong     (2, log.getUserId());
+            ps.setString     (2, log.getUserId());
             ps.setInt      (3, log.getLoopIdx());
             ps.setInt      (4, log.getFocusSec());
             ps.setInt      (5, log.getBreakSec());
@@ -58,7 +58,7 @@ public class LogDAO {
                     list.add(new TimerLog(
                             rs.getLong("log_id"),
                             rs.getString("room_id"),
-                            rs.getLong("user_id"),
+                            rs.getString("user_id"),
                             rs.getInt("loop_idx"),
                             rs.getInt("focus_sec"),
                             rs.getInt("break_sec"),
@@ -169,7 +169,7 @@ public class LogDAO {
                     list.add(new TimerLog(
                             rs.getLong("log_id"),
                             rs.getString("room_id"),
-                            rs.getLong("user_id"),
+                            rs.getString("user_id"),
                             rs.getInt("loop_idx"),
                             rs.getInt("focus_sec"),
                             rs.getInt("break_sec"),

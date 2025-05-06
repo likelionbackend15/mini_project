@@ -1,5 +1,6 @@
 package com.studybuddy.client.ui;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studybuddy.client.MainApp;
 import com.studybuddy.client.net.PacketListener;
@@ -11,18 +12,11 @@ import javafx.scene.control.*;
 import java.io.PrintWriter;
 import java.util.regex.Pattern;
 
-/**
- * 회원가입 화면 컨트롤러
- *
- * 1) Send Code 버튼  → (추후) 이메일 인증 코드 발송 요청
- * 2) Sign Up 버튼    → SIGNUP 패킷 전송
- * 3) 서버 ACK        → 로그인 화면으로 전환
- * 4) 서버 ERROR      → 오류 메시지 출력
- */
 public class SignUpController implements PacketListener {
 
     /* ---------- FXML 바인딩 ---------- */
     @FXML private TextField     idField;
+    @FXML private TextField     usernameField;   // 닉네임
     @FXML private TextField     emailField;
     @FXML private TextField     codeField;
     @FXML private PasswordField passwordField;
@@ -40,15 +34,16 @@ public class SignUpController implements PacketListener {
     /* ---------- 초기화 ---------- */
     @FXML
     public void initialize() {
-        /* 이메일 인증(추후 구현) */
+        // 이메일 인증 코드 요청
         sendCodeButton.setOnAction(e -> sendEmailCode());
 
-        /* 회원가입 */
+        // 회원가입
         signUpButton.setOnAction(e -> doSignUp());
 
-        /* 이미 계정 있음 → 로그인 화면으로 */
+        // 로그인 화면으로 이동
         loginLink.setOnAction(e ->
-                app.forwardTo("/fxml/LoginView.fxml", null));
+                app.forwardTo("/fxml/LoginView.fxml", null)
+        );
 
         errorLabel.setVisible(false);
     }
@@ -57,25 +52,35 @@ public class SignUpController implements PacketListener {
     public void setWriter(PrintWriter out) { this.out = out; }
     public void setApp(MainApp app)        { this.app = app; app.addScreenListener(this); }
 
-    /* ======================================================
-       1) Send Code 버튼 : 이메일 코드 발송 (stub)
-    ====================================================== */
+    // --- 1) Send Code 버튼 핸들러 ---
     private void sendEmailCode() {
-        // ★ 서버에서 이메일 인증 로직을 아직 구현하지 않았다면, 로컬에서 안내만 표시
-        showError("이메일 인증 기능은 추후 제공됩니다.");
+        String email = emailField.getText().trim();
+        if (!Pattern.matches("^[\\w.-]+@[\\w.-]+\\.[A-Za-z]{2,}$", email)) {
+            showError("올바른 이메일을 입력하세요.");
+            return;
+        }
+        try {
+            // {"email":"..."}
+            String body = String.format("{\"email\":\"%s\"}", email);
+            out.println(mapper.writeValueAsString(
+                    new Packet(PacketType.SEND_CODE, body)));
+        } catch (Exception ex) {
+            showError("코드 요청 실패: " + ex.getMessage());
+        }
     }
 
-    /* ======================================================
-       2) Sign Up 버튼 : SIGNUP 패킷 전송
-    ====================================================== */
+    // --- 2) Sign Up 버튼 핸들러 ---
     private void doSignUp() {
-        /* 2-1. 클라이언트 측 유효성 검사 */
-        String username = idField.getText().trim();
+        String id       = idField.getText().trim();
+        String username = usernameField.getText().trim();
         String email    = emailField.getText().trim();
+        String code     = codeField.getText().trim();
         String pw1      = passwordField.getText();
         String pw2      = confirmPasswordField.getText();
 
-        if (username.isEmpty() || email.isEmpty() || pw1.isEmpty() || pw2.isEmpty()) {
+        if (id.isEmpty() || username.isEmpty()
+                || email.isEmpty() || code.isEmpty()
+                || pw1.isEmpty() || pw2.isEmpty()) {
             showError("모든 필드를 입력하세요.");
             return;
         }
@@ -88,56 +93,69 @@ public class SignUpController implements PacketListener {
             return;
         }
 
-        /* 2-2. 서버로 SIGNUP 패킷 전송 */
         try {
-            String payload = String.format(
-                    "{\"username\":\"%s\",\"password\":\"%s\",\"email\":\"%s\"}",
-                    username, pw1, email);
-
+            // id, username, password, email, code 모두 포함
+            String body = String.format(
+                    "{\"id\":\"%s\",\"username\":\"%s\",\"password\":\"%s\"," +
+                            "\"email\":\"%s\",\"code\":\"%s\"}",
+                    id, username, pw1, email, code
+            );
             out.println(mapper.writeValueAsString(
-                    new Packet(PacketType.SIGNUP, payload)));
-
-        } catch (Exception e) {
-            showError("요청 오류: " + e.getMessage());
+                    new Packet(PacketType.SIGNUP, body)));
+        } catch (Exception ex) {
+            showError("회원가입 요청 실패: " + ex.getMessage());
         }
     }
 
-    /* ======================================================
-       3) PacketListener 구현
-    ====================================================== */
+    // --- 3) 서버 응답 처리 ---
     @Override
     public void onPacket(Packet pkt) {
-        switch (pkt.type()) {
-            case ACK -> handleAck(pkt);
-            case ERROR -> showError(extractError(pkt));
-            default -> { /* 무시 */ }
+        if (pkt.type() == PacketType.ACK) {
+            try {
+                JsonNode root = mapper.readTree(pkt.payloadJson());
+                String action = root.path("action").asText();
+
+                if ("SEND_CODE".equals(action)) {
+                    // 인증 코드 발송 성공
+                    Platform.runLater(() ->
+                            showInfo("인증 코드가 이메일로 발송되었습니다.")
+                    );
+                }
+                else if ("SIGNUP".equals(action)) {
+                    // 회원가입 성공 → 로그인 화면으로
+                    Platform.runLater(() ->
+                            app.forwardTo("/fxml/LoginView.fxml", pkt)
+                    );
+                }
+            } catch (Exception e) {
+                showError("응답 처리 오류: " + e.getMessage());
+            }
+        }
+        else if (pkt.type() == PacketType.ERROR) {
+            // 서버가 보낸 {"message":"..."} 중 message 필드만 뽑아서
+            String msg;
+            try {
+                msg = mapper.readTree(pkt.payloadJson())
+                        .path("message").asText();
+            } catch (Exception e) {
+                msg = "알 수 없는 오류";
+            }
+            showError(msg);
         }
     }
 
-    private void handleAck(Packet pkt) {
-        /* 가입 성공 → 로그인 화면으로 전환하면서 성공 메시지 전달 */
-        Platform.runLater(() ->
-                app.forwardTo("/fxml/LoginView.fxml", pkt));
-    }
+    @Override public void onError(Exception e) { showError(e.getMessage()); }
 
-    /* 서버 ERROR 페이로드에서 message 필드 추출 */
-    private String extractError(Packet pkt) {
-        try {
-            return mapper.readTree(pkt.payloadJson())
-                    .path("message").asText("Unknown error");
-        } catch (Exception e) { return "Unknown error"; }
-    }
-
-    @Override
-    public void onError(Exception e) { showError(e.getMessage()); }
-
-    /* ======================================================
-       4) 공통 헬퍼
-    ====================================================== */
+    // --- 헬퍼 ---
     private void showError(String msg) {
         Platform.runLater(() -> {
             errorLabel.setText(msg);
             errorLabel.setVisible(true);
         });
+    }
+    private void showInfo(String msg) {
+        Platform.runLater(() ->
+                new Alert(Alert.AlertType.INFORMATION, msg).showAndWait()
+        );
     }
 }

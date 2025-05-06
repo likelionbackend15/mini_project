@@ -148,13 +148,13 @@ public class PomodoroTimer {
 
                 // 2) 각 사용자별 TimerLog 생성
                 TimerLog logRow = new TimerLog(
-                        null,
-                        session.getMeta().getRoomId(),
-                        u.getId(),                       // ★ 사용자 ID
-                        loopIdx,
-                        session.getMeta().getFocusMin() * 60,
-                        0,
-                        LocalDateTime.now()
+                        null,                                   // log_id (AUTO_INCREMENT)
+                        session.getMeta().getRoomId(),          // room_id
+                        u.getId(),                              // user_id (String)
+                        loopIdx,                                // loop_idx
+                        session.getMeta().getFocusMin() * 60,   // focus_sec
+                        0,                                      // break_sec
+                        LocalDateTime.now()                     // ts
                 );
                 // 3) DB에 저장
                 logDao.save(logRow);

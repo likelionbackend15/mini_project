@@ -11,12 +11,12 @@ public class Room {
     private int focusMin;          // 집중 시간(분)
     private int breakMin;          // 휴식 시간(분)
     private int loops;             // 반복 횟수
-    private Long hostId;           // 방장 User.id
+    private String hostId;           // 방장 User.id
     private String password;       //프라이빗 방 비밀번호 (nullable)
     private RoomStatus status;     // OPEN, LOCKED, RUNNING, CLOSED
 
 
-    public Room(String roomId, String name, int maxMembers, boolean allowMidEntry, int focusMin, int breakMin, int loops, Long hostId,String password, RoomStatus status) {
+    public Room(String roomId, String name, int maxMembers, boolean allowMidEntry, int focusMin, int breakMin, int loops, String  hostId,String password, RoomStatus status) {
         this.roomId = roomId;
         this.name = name;
         this.maxMembers = maxMembers;
@@ -87,11 +87,11 @@ public class Room {
         this.loops = loops;
     }
 
-    public Long getHostId() {
+    public String getHostId() {
         return hostId;
     }
 
-    public void setHostId(Long hostId) {
+    public void setHostId(String hostId) {
         this.hostId = hostId;
     }
 

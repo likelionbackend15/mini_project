@@ -7,6 +7,8 @@ public enum PacketType {
     // 회원 관리
     LOGIN,       // 로그인 요청/응답
     SIGNUP,      // 회원가입 요청/응답
+    SEND_CODE,         // 이메일 인증 코드 전송
+    RESET_PASSWORD,    // 비밀번호 재설정 요청
 
     // 로비
     LIST_ROOMS,      // 방 목록 조회

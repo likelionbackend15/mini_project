@@ -9,6 +9,8 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
+import com.studybuddy.client.model.UserSession;
+import com.studybuddy.common.domain.User;
 
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -19,6 +21,8 @@ public class LoginController implements PacketListener {
     @FXML private PasswordField passwordField;
     @FXML private Button        loginButton;
     @FXML private Text          errorText;
+    @FXML private Hyperlink     signUpLink;
+    @FXML private Hyperlink forgotPasswordLink;
 
     private Socket socket;
     private PrintWriter out;
@@ -27,7 +31,18 @@ public class LoginController implements PacketListener {
 
     @FXML
     public void initialize() {
+        // 로그인 버튼
         loginButton.setOnAction(e -> doLogin());
+
+        // ★ 회원가입 링크 클릭 시 SignUp 뷰로 이동
+        signUpLink.setOnAction(e ->
+                app.forwardTo("/fxml/SignUpView.fxml", null)
+        );
+
+        // Forgot password 으로 이동
+        forgotPasswordLink.setOnAction(e ->
+                app.forwardTo("/fxml/ResetPasswordView.fxml", null)
+        );
     }
 
     /* MainApp이 의존성 주입 */
@@ -56,9 +71,14 @@ public class LoginController implements PacketListener {
         try {
             var node = mapper.readTree(pkt.payloadJson());
             if ("LOGIN".equals(node.get("action").asText())) {
-                Platform.runLater(() ->
-                        app.forwardTo("/fxml/LobbyView.fxml", pkt));
-            }
+                // 1) 서버가 보낸 user 객체 파싱
+                        User u = mapper.treeToValue(node.get("user"), User.class);
+                // 2) 전역 세션에 저장
+                        UserSession.getInstance().setUser(u);
+                // 3) 메인 스레드에서 로비로 화면 전환
+                        Platform.runLater(() ->
+                                app.forwardTo("/fxml/LobbyView.fxml", null));
+                           }
         } catch (Exception e) { e.printStackTrace(); }
     }
 

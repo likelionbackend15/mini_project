@@ -91,7 +91,10 @@ public class MainApp extends Application {
 
             switch (action) {
                 case "LOGIN"      -> forwardTo("/fxml/LobbyView.fxml", pkt);
-                case "SIGNUP"     -> { showAlert("회원가입 성공", "로그인 후 이용"); forwardTo("/fxml/LoginView.fxml", pkt); }
+                case "SIGNUP"     -> {                         // ★ 수정-2
+                    showAlert("회원가입 성공", "로그인 후 이용하세요");
+                    forwardTo("/fxml/LoginView.fxml", pkt);
+                }
                 case "LIST_ROOMS" -> forwardTo("/fxml/RoomListView.fxml", pkt);
                 case "CREATE_ROOM", "JOIN_ROOM", "JOIN_PRIVATE"
                         -> forwardTo("/fxml/StudyRoomView.fxml", pkt);
@@ -121,12 +124,23 @@ public class MainApp extends Application {
 
             Object ctrl = loader.getController();
 
-            /* Login 화면이면 setApp() + setWriter() 모두 호출 */
+            // 1) 로그인 화면
             if (ctrl instanceof com.studybuddy.client.ui.LoginController lc) {
                 lc.setApp(this);
                 lc.setWriter(out);
+
+                // 2) 회원가입 화면
+            } else if (ctrl instanceof com.studybuddy.client.ui.SignUpController sc) {
+                sc.setApp(this);
+                sc.setWriter(out);
+
+                // 3) 비밀번호 재설정 화면   ★ 여기를 추가
+            } else if (ctrl instanceof com.studybuddy.client.ui.ResetPasswordController rpc) {
+                rpc.setApp(this);
+                rpc.setWriter(out);
+
+                // 4) 그 외 컨트롤러 (예: Lobby, RoomCreate, ...)
             } else {
-                // 다른 화면들은 setWriter(out) 만
                 ctrl.getClass()
                         .getMethod("setWriter", PrintWriter.class)
                         .invoke(ctrl, out);

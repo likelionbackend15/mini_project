@@ -19,6 +19,8 @@ public class LoginController implements PacketListener {
     @FXML private PasswordField passwordField;
     @FXML private Button        loginButton;
     @FXML private Text          errorText;
+    @FXML private Hyperlink     signUpLink;
+    @FXML private Hyperlink forgotPasswordLink;
 
     private Socket socket;
     private PrintWriter out;
@@ -27,7 +29,18 @@ public class LoginController implements PacketListener {
 
     @FXML
     public void initialize() {
+        // 로그인 버튼
         loginButton.setOnAction(e -> doLogin());
+
+        // ★ 회원가입 링크 클릭 시 SignUp 뷰로 이동
+        signUpLink.setOnAction(e ->
+                app.forwardTo("/fxml/SignUpView.fxml", null)
+        );
+
+        // Forgot password 으로 이동
+        forgotPasswordLink.setOnAction(e ->
+                app.forwardTo("/fxml/ResetPasswordView.fxml", null)
+        );
     }
 
     /* MainApp이 의존성 주입 */

@@ -40,7 +40,7 @@
     <filter-actions connection-id="76409738-27ac-4bd2-b6ad-e8a0080db376" dataset="studybuddy.rooms" active-filter-id="" />
   </component>
   <component name="DBNavigator.Project.FileConnectionMappingManager">
-    <mapping file-url="file://$PROJECT_DIR$/server/src/main/resources/db/init.sql" connection-id="virtual-mysql-connection" session-id="" current-schema="" />
+    <mapping file-url="file://$PROJECT_DIR$/server/src/main/resources/db/init.sql" connection-id="virtual-mysql-connection" session-id="MAIN" current-schema="" />
   </component>
   <component name="DBNavigator.Project.ObjectQuickFilterManager">
     <last-used-operator value="EQUAL" />

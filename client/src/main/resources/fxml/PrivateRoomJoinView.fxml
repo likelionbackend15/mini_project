@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.studybuddy.client.ui.PrivateRoomJoinController"
+            style="-fx-background-color: white; -fx-padding: 24;">
+
+    <!-- 상단 타이틀 -->
+    <top>
+        <Label text="🔒 비공개 방 입장"
+               style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+    </top>
+
+    <!-- 입력 영역 -->
+    <center>
+        <VBox spacing="16" alignment="CENTER">
+            <TextField fx:id="roomIdField"
+                       promptText="방 ID"
+                       prefWidth="240"
+                       prefHeight="40"
+                       style="-fx-background-radius: 6;" />
+
+            <PasswordField fx:id="passwordField"
+                           promptText="비밀번호"
+                           prefWidth="240"
+                           prefHeight="40"
+                           style="-fx-background-radius: 6;" />
+
+            <Text fx:id="errorText"
+                  text=""
+                  fill="red"
+                  style="-fx-font-size: 13px;" />
+        </VBox>
+    </center>
+
+    <!-- 하단 버튼 -->
+    <bottom>
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button fx:id="cancelButton"
+                    text="취소"
+                    style="-fx-background-color: #adb5bd; -fx-text-fill: white;" />
+            <Button fx:id="joinButton"
+                    text="입장하기"
+                    style="-fx-background-color: #0d6efd; -fx-text-fill: white;" />
+        </HBox>
+    </bottom>
+</BorderPane>

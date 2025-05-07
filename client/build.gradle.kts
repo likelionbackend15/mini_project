@@ -27,7 +27,7 @@ application {
 }
 
 tasks.withType<JavaExec>().configureEach {
-    val fxLib = "/Users/kimhyunjin/Downloads/javafx-sdk-21.0.6/lib"
+    val fxLib = "/Library/Java/Mylib/javafx-sdk-21.0.6/lib"
     /*
     *                 위의 fx주소 꼭 각자 환경에 맞게 수정하시고 gradle reload 하세요!!!!!!!
     *

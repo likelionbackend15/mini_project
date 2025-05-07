@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx/20"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.studybuddy.client.ui.RoomHostController"
+      spacing="12" alignment="CENTER"
+      style="-fx-padding:20; -fx-background-color: linear-gradient(to bottom, #d7d7d7, #f4f4f4);">
+
+    <!-- 기존 호스트 대기 화면 -->
+    <Label fx:id="roomNameLabel" style="-fx-font-size:28;-fx-font-weight:bold;"/>
+    <HBox spacing="8" alignment="CENTER">
+        <Label fx:id="hostLabel"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="⚙" fx:id="editSettingsButton" onAction="#onToggleSettings"/>
+    </HBox>
+    <Label fx:id="statusLabel"/>
+    <Label fx:id="participantsLabel"/>
+    <TableView fx:id="participantsTable" prefHeight="200" prefWidth="360">
+        <columns>
+            <TableColumn fx:id="nameCol" text="Participant" prefWidth="180"/>
+            <TableColumn fx:id="roleCol" text="Role"        prefWidth="180"/>
+        </columns>
+    </TableView>
+    <HBox spacing="10">
+        <!-- & → &amp; 로 변경 -->
+        <Button text="Lock &amp; Wait Members"
+                fx:id="lockWaitButton"
+                onAction="#onLockWait"
+                style="-fx-background-color:#0d6efd; -fx-text-fill:white;"/>
+        <Button text="Start Focus"
+                fx:id="startFocusButton"
+                onAction="#onStartFocus"
+                style="-fx-background-color:#0d6efd; -fx-text-fill:white;"/>
+    </HBox>
+
+    <!-- 여기서부터 숨겨둔 설정 패널 -->
+    <Pane fx:id="settingsOverlay" visible="false"
+          style="-fx-background-color: rgba(0,0,0,0.3); -fx-padding:0;"
+          VBox.vgrow="ALWAYS">
+        <VBox alignment="CENTER" spacing="10"
+              layoutX="50" layoutY="50" prefWidth="300" prefHeight="380"
+              style="-fx-background-color:white; -fx-border-radius:8; -fx-background-radius:8; -fx-padding:20;">
+            <Label text="Edit Settings" style="-fx-font-size:18;-fx-font-weight:bold;"/>
+            <GridPane hgap="8" vgap="8">
+                <Label text="Max Members:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Spinner fx:id="maxMembersSpinner" editable="true"
+                         GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Focus Time:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Spinner fx:id="focusSpinner"      editable="true"
+                         GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Break Time:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <Spinner fx:id="breakSpinner"      editable="true"
+                         GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                <Label text="Cycles:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <Spinner fx:id="loopsSpinner"      editable="true"
+                         GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                <Label text="Allow Mid-Entry:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                <CheckBox fx:id="midEntryBox"
+                          GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                <Label text="Password:"       GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                <PasswordField fx:id="passwordField" promptText="Optional"
+                               disable="true"
+                               GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+            </GridPane>
+
+            <Label fx:id="errorLabel" textFill="red" visible="false"/>
+
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="Apply" fx:id="applyButton" onAction="#onApplySettings"/>
+                <Button text="Cancel" onAction="#onToggleSettings"/>
+            </HBox>
+        </VBox>
+    </Pane>
+</VBox>

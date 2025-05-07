@@ -1,8 +1,5 @@
 package com.studybuddy.client.ui;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studybuddy.client.MainApp;
 import com.studybuddy.client.net.PacketListener;
@@ -20,19 +17,23 @@ import java.net.Socket;
 
 public class LoginController implements PacketListener {
 
-    @FXML private TextField idField;
-    @FXML private PasswordField passwordField;
-    @FXML private Button        loginButton;
-    @FXML private Label         errorLabel; // ← Text → Label 로 변경
-    @FXML private Hyperlink     signUpLink;
-    @FXML private Hyperlink     forgotPasswordLink;
+    @FXML
+    private TextField idField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private Button loginButton;
+    @FXML
+    private Label errorLabel; // ← Text → Label 로 변경
+    @FXML
+    private Hyperlink signUpLink;
+    @FXML
+    private Hyperlink forgotPasswordLink;
 
     private Socket socket;
     private PrintWriter out;
-
-    private MainApp app;                   // MainApp 참조
-    private static final ObjectMapper mapper = JsonUtil.mapper();
-
+    private MainApp app;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @FXML
     public void initialize() {
@@ -80,23 +81,25 @@ public class LoginController implements PacketListener {
         if (pkt.type() != PacketType.ACK) return;
 
         try {
+            var node = mapper.readTree(pkt.payloadJson());
+            if ("LOGIN".equals(node.get("action").asText())) {
 
-            JsonNode root = mapper.readTree(pkt.payloadJson());
-            String action = root.path("action").asText();
-
-            if ("LOGIN".equals(action)) {
-                // 서버가 보낸 user 객체 파싱
-                User u = mapper.treeToValue(root.get("user"), User.class);
-
-                // 전역 세션에 저장
+                User u = mapper.treeToValue(node.get("user"), User.class);
                 UserSession.getInstance().setUser(u);
-
-                // 메인 스레드에서 로비로 화면 전환
                 Platform.runLater(() ->
-                        app.forwardTo("/fxml/RoomCreateView.fxml", null)
-                );
+                        app.forwardTo("/fxml/LobbyView.fxml", null));
             }
-        } catch (JsonProcessingException e) {
+
+
+            // 1) 서버가 보낸 user 객체 파싱
+            User u = mapper.treeToValue(node.get("user"), User.class);
+            // 2) 전역 세션에 저장
+            UserSession.getInstance().setUser(u);
+            // 3) 메인 스레드에서 로비로 화면 전환
+            Platform.runLater(() ->
+                    app.forwardTo("/fxml/RoomCreateView.fxml", null));
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -111,8 +114,6 @@ public class LoginController implements PacketListener {
         errorLabel.setText(msg);
 
         errorLabel.setVisible(true); // 숨겨져 있다면 표시
-
-        errorLabel.setVisible(true);
 
     }
 }

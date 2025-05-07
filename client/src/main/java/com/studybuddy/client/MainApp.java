@@ -1,12 +1,10 @@
 package com.studybuddy.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studybuddy.client.net.ClientSocket;
 import com.studybuddy.client.net.PacketListener;
 import com.studybuddy.common.Packet;
-import com.studybuddy.common.PacketType;
 import com.studybuddy.common.util.JsonUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -88,26 +86,25 @@ public class MainApp extends Application {
     /** ACK 본문(action)에 따라 화면 이동 */
     private void handleAck(Packet pkt) {
         try {
-            JsonNode root = mapper.readTree(pkt.payloadJson());
-            String action = root.path("action").asText();
+            String action = mapper.readTree(pkt.payloadJson())
+                    .get("action").asText();
 
             switch (action) {
-                case "LOGIN"      -> forwardTo("/fxml/RoomListView.fxml", pkt);
+                case "LOGIN"      -> forwardTo("/fxml/RoomCreateView.fxml", pkt);
                 case "SIGNUP"     -> {            // 회원가입 완료
                     showAlert("회원가입 성공", "로그인 후 이용하세요");
                     forwardTo("/fxml/LoginView.fxml", pkt);
                 }
                 case "LIST_ROOMS" -> forwardTo("/fxml/RoomListView.fxml", pkt);
-                case "JOIN_ROOM", "JOIN_PRIVATE"
-                        -> forwardTo("/fxml/LobbyView.fxml", pkt);
-
+                case "CREATE_ROOM", "JOIN_ROOM", "JOIN_PRIVATE"
+                        -> forwardTo("/fxml/StudyRoomView.fxml", pkt);
                 case "BACK_TO_LOBBY"
                         -> forwardTo("/fxml/LobbyView.fxml", pkt);
                 case "ROOM_STATS", "DOWNLOAD_CSV"
                         -> forwardTo("/fxml/StatsView.fxml", pkt);
                 default -> {
                     // 여기로 오면 화면 전환이 필요 없는 ACK.
-                    if (currentListener != null)
+                    if (currentListener != null)   // ★ 추가
                         currentListener.onPacket(pkt);
                 }
             }
@@ -174,7 +171,6 @@ public class MainApp extends Application {
         a.setHeaderText(null);
         a.showAndWait();
     }
-
 
     public static void main(String[] args) { launch(args); }
 }

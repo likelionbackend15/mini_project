@@ -1,5 +1,6 @@
 package com.studybuddy.client.ui;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studybuddy.client.MainApp;
 import com.studybuddy.client.net.PacketListener;
@@ -69,11 +70,25 @@ public class PrivateRoomJoinController implements PacketListener {
 
         Platform.runLater(() -> {
             if (pkt.type() == PacketType.ACK) {
-                closePopup();
-                // 로비 등에서 팝업 닫힘 후 새 화면 갱신 필요 시 콜백 호출 가능
-            } else {
                 try {
-                    var node = mapper.readTree(pkt.payloadJson());
+                    // 1) action 파싱
+                    JsonNode root = mapper.readTree(pkt.payloadJson());
+                    String action = root.path("action").asText();
+
+                    if ("JOIN_PRIVATE".equals(action)) {
+                        // 2) 조인 성공 시 로비(또는 원하는 뷰)로 전환
+                        app.forwardTo("/fxml/LobbyView.fxml", pkt);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    // 3) 팝업은 무조건 닫아줌
+                    closePopup();
+                }
+            }
+            else { // ERROR
+                try {
+                    JsonNode node = mapper.readTree(pkt.payloadJson());
                     errorText.setText(node.get("message").asText());
                 } catch (Exception e) {
                     errorText.setText("응답 파싱 실패");
@@ -81,6 +96,7 @@ public class PrivateRoomJoinController implements PacketListener {
             }
         });
     }
+
 
     @Override
     public void onError(Exception e) {

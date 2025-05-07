@@ -1,5 +1,8 @@
 package com.studybuddy.client.ui;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studybuddy.client.MainApp;
 import com.studybuddy.client.net.PacketListener;
@@ -28,7 +31,7 @@ public class LoginController implements PacketListener {
     private Socket socket;
     private PrintWriter out;
     private MainApp app;                   // MainApp 참조
-    private final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = JsonUtil.mapper();
 
     @FXML
     public void initialize() {
@@ -70,17 +73,24 @@ public class LoginController implements PacketListener {
         if (pkt.type() != PacketType.ACK) return;
 
         try {
-            var node = mapper.readTree(pkt.payloadJson());
-            if ("LOGIN".equals(node.get("action").asText())) {
-                // 1) 서버가 보낸 user 객체 파싱
-                        User u = mapper.treeToValue(node.get("user"), User.class);
-                // 2) 전역 세션에 저장
-                        UserSession.getInstance().setUser(u);
-                // 3) 메인 스레드에서 로비로 화면 전환
-                        Platform.runLater(() ->
-                                app.forwardTo("/fxml/RoomCreateView.fxml", null));
-                           }
-        } catch (Exception e) { e.printStackTrace(); }
+            JsonNode root = mapper.readTree(pkt.payloadJson());
+            String action = root.path("action").asText();
+
+            if ("LOGIN".equals(action)) {
+                // 서버가 보낸 user 객체 파싱
+                User u = mapper.treeToValue(root.get("user"), User.class);
+
+                // 전역 세션에 저장
+                UserSession.getInstance().setUser(u);
+
+                // 메인 스레드에서 로비로 화면 전환
+                Platform.runLater(() ->
+                        app.forwardTo("/fxml/RoomCreateView.fxml", null)
+                );
+            }
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override public void onError(Exception e) { showError(e.getMessage()); }

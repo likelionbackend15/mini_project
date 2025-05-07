@@ -9,7 +9,6 @@ import com.studybuddy.common.util.JsonUtil;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.text.Text;
 import com.studybuddy.client.model.UserSession;
 import com.studybuddy.common.domain.User;
 
@@ -21,36 +20,40 @@ public class LoginController implements PacketListener {
     @FXML private TextField idField;
     @FXML private PasswordField passwordField;
     @FXML private Button        loginButton;
-    @FXML private Label errorLabel;
+    @FXML private Label         errorLabel; // ← Text → Label 로 변경
     @FXML private Hyperlink     signUpLink;
-    @FXML private Hyperlink forgotPasswordLink;
+    @FXML private Hyperlink     forgotPasswordLink;
 
     private Socket socket;
     private PrintWriter out;
-    private MainApp app;                   // MainApp 참조
+    private MainApp app;
     private final ObjectMapper mapper = new ObjectMapper();
 
     @FXML
     public void initialize() {
-        // 로그인 버튼
         loginButton.setOnAction(e -> doLogin());
 
-        // ★ 회원가입 링크 클릭 시 SignUp 뷰로 이동
         signUpLink.setOnAction(e ->
                 app.forwardTo("/fxml/SignUpView.fxml", null)
         );
 
-        // Forgot password 으로 이동
         forgotPasswordLink.setOnAction(e ->
                 app.forwardTo("/fxml/ResetPasswordView.fxml", null)
         );
     }
 
-    /* MainApp이 의존성 주입 */
-    public void setWriter(PrintWriter out) { this.out = out; }
-    public void setApp(MainApp app)        { this.app = app; app.addScreenListener(this); }
+    public void setWriter(PrintWriter out) {
+        this.out = out;
+    }
+
+    public void setApp(MainApp app) {
+        this.app = app;
+        app.addScreenListener(this);
+    }
+
 
     /* 로그인 패킷 전송 ----------------------------------------------------- */
+
     private void doLogin() {
         try {
             String payload = String.format(
@@ -64,7 +67,9 @@ public class LoginController implements PacketListener {
         }
     }
 
+
     /* 서버 응답 처리 -------------------------------------------------------- */
+
     @Override
     public void onPacket(Packet pkt) {
         if (pkt.type() != PacketType.ACK) return;
@@ -72,6 +77,16 @@ public class LoginController implements PacketListener {
         try {
             var node = mapper.readTree(pkt.payloadJson());
             if ("LOGIN".equals(node.get("action").asText())) {
+
+                User u = mapper.treeToValue(node.get("user"), User.class);
+                UserSession.getInstance().setUser(u);
+                Platform.runLater(() ->
+                        app.forwardTo("/fxml/LobbyView.fxml", null));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
                 // 1) 서버가 보낸 user 객체 파싱
                         User u = mapper.treeToValue(node.get("user"), User.class);
                 // 2) 전역 세션에 저장
@@ -81,12 +96,20 @@ public class LoginController implements PacketListener {
                                 app.forwardTo("/fxml/RoomCreateView.fxml", null));
                            }
         } catch (Exception e) { e.printStackTrace(); }
+
     }
 
-    @Override public void onError(Exception e) { showError(e.getMessage()); }
+    @Override
+    public void onError(Exception e) {
+        showError(e.getMessage());
+    }
 
     private void showError(String msg) {
         errorLabel.setText(msg);
+
+        errorLabel.setVisible(true); // 숨겨져 있다면 표시
+
         errorLabel.setVisible(true);
+
     }
 }

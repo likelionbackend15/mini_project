@@ -14,6 +14,7 @@ public class LobbyController {
     @FXML private Button createRoomButton;
     @FXML private Button listRoomsButton;
     @FXML private Button statsButton;
+    @FXML private Button joinPrivateRoomButton;
 
     private PrintWriter out;
 
@@ -23,6 +24,7 @@ public class LobbyController {
         createRoomButton.setOnAction(e -> showCreateRoom());
         listRoomsButton.setOnAction(e -> showRoomList());
         statsButton.setOnAction(e -> requestStats());
+        joinPrivateRoomButton.setOnAction(e -> joinPrivateRoom());
     }
 
     public void setWriter(PrintWriter out) {
@@ -35,6 +37,10 @@ public class LobbyController {
 
     private void showRoomList() {
         // TODO: 방 목록 요청 → RoomListController 로 전환
+    }
+
+    private void joinPrivateRoom(){
+        // TODO: 비공개방 입장 요청
     }
 
     private void requestStats() {

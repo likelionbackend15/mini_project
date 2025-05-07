@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.studybuddy.client.ui.LobbyController"
+           style="-fx-background-color: linear-gradient(to bottom, #d7d7d7, #f4f4f4);">
+    <VBox alignment="CENTER"
+          StackPane.alignment="CENTER"
+          style="
+              -fx-background-color: white;
+              -fx-background-radius: 8;
+              -fx-padding: 40 50;
+              -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.22), 16, 0.12, 0, 4);
+          ">
+        <Button fx:id="listRoomsButton"
+                text="Room List"
+                prefWidth="320"
+                prefHeight="46"
+                style="
+                    -fx-background-color: #0d6efd;
+                    -fx-text-fill: white;
+                    -fx-font-size: 18;
+                    -fx-background-radius: 6;
+                "/>
+        <Button fx:id="createRoomButton"
+                text="Create Study Room"
+                prefWidth="320"
+                prefHeight="46"
+                style="
+                    -fx-background-color: #0d6efd;
+                    -fx-text-fill: white;
+                    -fx-font-size: 18;
+                    -fx-background-radius: 6;
+                "/>
+        <Button fx:id="joinPrivateRoomButton"
+                text="Join Private Room"
+                prefWidth="320"
+                prefHeight="46"
+                style="
+                    -fx-background-color: #0d6efd;
+                    -fx-text-fill: white;
+                    -fx-font-size: 18;
+                    -fx-background-radius: 6;
+                "/>
+        <Button fx:id="statsButton"
+                text="My Info"
+                prefWidth="320"
+                prefHeight="46"
+                style="
+                    -fx-background-color: #0d6efd;
+                    -fx-text-fill: white;
+                    -fx-font-size: 18;
+                    -fx-background-radius: 6;
+                "/>
+    </VBox>
+</StackPane>

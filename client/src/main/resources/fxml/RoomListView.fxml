@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane prefHeight="500" prefWidth="600" style="-fx-background-color: #ffffff;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.client.ui.RoomListController">
+    <children>
+
+        <!-- Title -->
+        <Label layoutX="245.0" layoutY="22.0" style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1f2937;" text="Room List" />
+
+        <!-- Table -->
+        <TableView fx:id="roomTable" layoutX="50" layoutY="70" prefHeight="320" prefWidth="500" style="-fx-font-size: 14px; -fx-border-color: #d1d5db; -fx-border-radius: 8px; -fx-background-radius: 8px;">
+            <columns>
+                <TableColumn fx:id="nameColumn" prefWidth="120" text="Name" />
+                <TableColumn fx:id="hostColumn" prefWidth="80" text="Host" />
+                <TableColumn fx:id="usersColumn" prefWidth="70" text="Users" />
+                <TableColumn fx:id="timerColumn" prefWidth="100" text="Timer" />
+                <TableColumn fx:id="statusColumn" prefWidth="70" text="Status" />
+                <TableColumn fx:id="joinColumn" prefWidth="60" text="Join" />
+            </columns>
+        </TableView>
+
+        <!-- Button -->
+
+        <Button layoutX="230" layoutY="410"  prefHeight="41.0" prefWidth="153.0" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 6 12 6 12;                        -fx-background-radius: 8px; -fx-cursor: hand;" text="Back to Lobby" />
+
+        <!-- join 버튼은 자바 코드에서 동적으로 controller에서 동적으로 만들어줘야 합니다  -->
+
+
+        <!-- 에러 텍스트 -->
+        <Text fx:id="errorText" layoutX="50" layoutY="400" style="-fx-fill: red;" />
+
+        <!-- 새로고침 버튼 -->
+        <Button fx:id="refreshButton" layoutX="420" layoutY="410" prefHeight="40" prefWidth="100"
+                style="-fx-background-color: #10b981; -fx-text-fill: white;" text="Refresh" />
+
+        <!-- 참여 버튼 -->
+        <Button fx:id="joinButton" layoutX="100" layoutY="410" prefHeight="40" prefWidth="100"
+                style="-fx-background-color: #f59e0b; -fx-text-fill: white;" text="Join" />
+
+        <!-- 뒤로가기 버튼 -->
+        <Button fx:id="backButton" layoutX="230" layoutY="410" prefHeight="40" prefWidth="150"
+                style="-fx-background-color: #3b82f6; -fx-text-fill: white;" text="Back to Lobby" />
+
+    </children>
+</AnchorPane>

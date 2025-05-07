@@ -8,6 +8,7 @@ import com.studybuddy.common.domain.User;
 import com.studybuddy.common.dto.CreateRoomReq;
 import com.studybuddy.common.dto.RoomInfo;
 import com.studybuddy.common.dto.RoomStats; // ★ 통계 DTO (있다고 가정)
+import com.studybuddy.common.util.JsonUtil;
 import com.studybuddy.server.dao.UserDAO;
 import com.studybuddy.server.util.MailUtil;
 import jakarta.mail.MessagingException;
@@ -30,7 +31,7 @@ public class ClientHandler implements Runnable {
 
     /* ---------------- 필드 ---------------- */
     private static final Logger log = LoggerFactory.getLogger(ClientHandler.class);
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = JsonUtil.mapper();
 
     private final Socket socket;
     private final UserDAO userDao;

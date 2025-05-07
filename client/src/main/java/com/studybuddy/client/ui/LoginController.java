@@ -5,6 +5,7 @@ import com.studybuddy.client.MainApp;
 import com.studybuddy.client.net.PacketListener;
 import com.studybuddy.common.Packet;
 import com.studybuddy.common.PacketType;
+import com.studybuddy.common.util.JsonUtil;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -16,7 +17,7 @@ import java.net.Socket;
 
 public class LoginController implements PacketListener {
 
-    @FXML private TextField     usernameField;
+    @FXML private TextField idField;
     @FXML private PasswordField passwordField;
     @FXML private Button        loginButton;
     @FXML private Label         errorLabel; // ← Text → Label 로 변경
@@ -50,18 +51,24 @@ public class LoginController implements PacketListener {
         app.addScreenListener(this);
     }
 
+
+    /* 로그인 패킷 전송 ----------------------------------------------------- */
+
     private void doLogin() {
         try {
             String payload = String.format(
-                    "{\"username\":\"%s\",\"password\":\"%s\"}",
-                    usernameField.getText(), passwordField.getText());
+                    "{\"id\":\"%s\",\"password\":\"%s\"}",
+                    idField.getText(), passwordField.getText());
 
-            out.println(mapper.writeValueAsString(
-                    new Packet(PacketType.LOGIN, payload)));
+            String json = JsonUtil.mapper().writeValueAsString(new Packet(PacketType.LOGIN, payload));
+            out.println(json);
         } catch (Exception ex) {
-            showError("로그인 요청 오류");
+            showError("로그인 요청 오류: " + ex.getMessage());
         }
     }
+
+
+    /* 서버 응답 처리 -------------------------------------------------------- */
 
     @Override
     public void onPacket(Packet pkt) {
@@ -70,6 +77,7 @@ public class LoginController implements PacketListener {
         try {
             var node = mapper.readTree(pkt.payloadJson());
             if ("LOGIN".equals(node.get("action").asText())) {
+
                 User u = mapper.treeToValue(node.get("user"), User.class);
                 UserSession.getInstance().setUser(u);
                 Platform.runLater(() ->
@@ -78,6 +86,17 @@ public class LoginController implements PacketListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+                // 1) 서버가 보낸 user 객체 파싱
+                        User u = mapper.treeToValue(node.get("user"), User.class);
+                // 2) 전역 세션에 저장
+                        UserSession.getInstance().setUser(u);
+                // 3) 메인 스레드에서 로비로 화면 전환
+                        Platform.runLater(() ->
+                                app.forwardTo("/fxml/RoomCreateView.fxml", null));
+                           }
+        } catch (Exception e) { e.printStackTrace(); }
+
     }
 
     @Override
@@ -87,6 +106,10 @@ public class LoginController implements PacketListener {
 
     private void showError(String msg) {
         errorLabel.setText(msg);
+
         errorLabel.setVisible(true); // 숨겨져 있다면 표시
+
+        errorLabel.setVisible(true);
+
     }
 }

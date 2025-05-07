@@ -90,48 +90,44 @@ public class RoomCreateController implements PacketListener {
         }
     }
 
-    /** 서버로부터 오는 패킷 처리 (ACK / ERROR) */
     @Override
     public void onPacket(Packet pkt) {
-        log.debug("⬅️ RoomCreateController.onPacket: type={} payload={}",
-                pkt.type(), pkt.payloadJson());
-        if (pkt.type() == PacketType.ACK) {
-            // ACK 전체를 UI 스레드에서 처리
-            Platform.runLater(() -> {
+        // ACK 혹은 ERROR 만 처리
+        if (pkt.type() != PacketType.ACK && pkt.type() != PacketType.ERROR) {
+            return;
+        }
+
+        Platform.runLater(() -> {
+            if (pkt.type() == PacketType.ACK) {
                 try {
-                    // 1) wrapper 전체 Tree 로 읽고
+                    // 1) wrapper 전체 JSON 파싱
                     JsonNode root = JsonUtil.mapper().readTree(pkt.payloadJson());
                     String action = root.path("action").asText();
 
+                    // 2) CREATE_ROOM 액션만 처리 → RoomHostView로 이동
                     if ("CREATE_ROOM".equals(action)) {
-                        // 2) info 필드만 꺼내고
                         JsonNode infoNode = root.get("info");
-                        // 3) infoNode JSON 문자열을 payload 로 쓰는 새 Packet 생성
                         Packet infoPkt = new Packet(PacketType.ACK, infoNode.toString());
-                        // 4) RoomHostView 로 화면 전환 (첫 패킷으로 전달)
                         app.forwardTo("/fxml/RoomHostView.fxml", infoPkt);
                     }
+                    // (필요하다면 다른 ACK 액션도 여기에 추가)
+
                 } catch (Exception ex) {
                     errorText.setText("응답 처리 오류: " + ex.getMessage());
                     errorText.setVisible(true);
                 }
-            });
-        }
-        else if (pkt.type() == PacketType.ERROR) {
-            Platform.runLater(() -> {
+            } else { // ERROR
                 try {
-                    String msg = JsonUtil.mapper()
-                            .readTree(pkt.payloadJson())
-                            .path("message").asText();
-                    errorText.setText(msg);
-                    errorText.setVisible(true);
+                    JsonNode err = JsonUtil.mapper().readTree(pkt.payloadJson());
+                    errorText.setText(err.path("message").asText());
                 } catch (Exception e) {
                     errorText.setText("알 수 없는 오류");
-                    errorText.setVisible(true);
                 }
-            });
-        }
+                errorText.setVisible(true);
+            }
+        });
     }
+
 
 
     @Override

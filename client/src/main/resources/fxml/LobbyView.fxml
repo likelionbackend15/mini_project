@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
 
-<StackPane xmlns="http://javafx.com/javafx"
-           xmlns:fx="http://javafx.com/fxml"
+<StackPane xmlns="http://javafx.com/javafx/20"
+           xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="com.studybuddy.client.ui.LobbyController"
            style="-fx-background-color: linear-gradient(to bottom, #d7d7d7, #f4f4f4);">
-    <VBox alignment="CENTER"
+
+    <VBox alignment="CENTER" spacing="20"
           StackPane.alignment="CENTER"
           style="
               -fx-background-color: white;
@@ -18,45 +18,29 @@
               -fx-padding: 40 50;
               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.22), 16, 0.12, 0, 4);
           ">
+        <!-- ① welcomeText 추가 -->
+        <Text fx:id="welcomeText"
+              style="-fx-font-size: 20; -fx-font-weight: bold;"
+              text="환영합니다,"/>
+
         <Button fx:id="listRoomsButton"
                 text="Room List"
-                prefWidth="320"
-                prefHeight="46"
-                style="
-                    -fx-background-color: #0d6efd;
-                    -fx-text-fill: white;
-                    -fx-font-size: 18;
-                    -fx-background-radius: 6;
-                "/>
+                prefWidth="320" prefHeight="46"
+                style="-fx-background-color: #0d6efd; -fx-text-fill: white; -fx-font-size: 18; -fx-background-radius: 6;"/>
+
         <Button fx:id="createRoomButton"
                 text="Create Study Room"
-                prefWidth="320"
-                prefHeight="46"
-                style="
-                    -fx-background-color: #0d6efd;
-                    -fx-text-fill: white;
-                    -fx-font-size: 18;
-                    -fx-background-radius: 6;
-                "/>
+                prefWidth="320" prefHeight="46"
+                style="-fx-background-color: #0d6efd; -fx-text-fill: white; -fx-font-size: 18; -fx-background-radius: 6;"/>
+
         <Button fx:id="joinPrivateRoomButton"
                 text="Join Private Room"
-                prefWidth="320"
-                prefHeight="46"
-                style="
-                    -fx-background-color: #0d6efd;
-                    -fx-text-fill: white;
-                    -fx-font-size: 18;
-                    -fx-background-radius: 6;
-                "/>
+                prefWidth="320" prefHeight="46"
+                style="-fx-background-color: #0d6efd; -fx-text-fill: white; -fx-font-size: 18; -fx-background-radius: 6;"/>
+
         <Button fx:id="statsButton"
                 text="My Info"
-                prefWidth="320"
-                prefHeight="46"
-                style="
-                    -fx-background-color: #0d6efd;
-                    -fx-text-fill: white;
-                    -fx-font-size: 18;
-                    -fx-background-radius: 6;
-                "/>
+                prefWidth="320" prefHeight="46"
+                style="-fx-background-color: #0d6efd; -fx-text-fill: white; -fx-font-size: 18; -fx-background-radius: 6;"/>
     </VBox>
 </StackPane>

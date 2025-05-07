@@ -1,5 +1,7 @@
 package com.studybuddy.client.ui;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.studybuddy.client.MainApp;
 import com.studybuddy.client.model.UserSession;
 import com.studybuddy.common.Packet;
 import com.studybuddy.common.PacketType;
@@ -16,38 +18,56 @@ public class LobbyController {
     @FXML private Button statsButton;
     @FXML private Button joinPrivateRoomButton;
 
+    private MainApp app;
     private PrintWriter out;
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    /** MainApp.forwardTo()에서 자동 호출됩니다 */
+    public void setWriter(PrintWriter out) {
+        this.out = out;
+    }
+
+    /** MainApp.forwardTo()에서 자동 호출됩니다 */
+    public void setApp(MainApp app) {
+        this.app = app;
+    }
 
     @FXML
     public void initialize() {
+        // welcomeText는 FXML에서 바인딩됩니다
         welcomeText.setText("환영합니다, " + UserSession.getInstance().getCurrentUser().getUsername());
+
         createRoomButton.setOnAction(e -> showCreateRoom());
         listRoomsButton.setOnAction(e -> showRoomList());
         statsButton.setOnAction(e -> requestStats());
         joinPrivateRoomButton.setOnAction(e -> joinPrivateRoom());
     }
 
-    public void setWriter(PrintWriter out) {
-        this.out = out;
-    }
-
+    /** 방 만들기 화면으로 전환 */
     private void showCreateRoom() {
-        // TODO: FXML 로딩 & 장면 전환
+        app.forwardTo("/fxml/RoomCreateView.fxml", null);
     }
 
+    /** 방 목록 요청 후 RoomListController가 처리 */
     private void showRoomList() {
-        // TODO: 방 목록 요청 → RoomListController 로 전환
-    }
-
-    private void joinPrivateRoom(){
-        // TODO: 비공개방 입장 요청
-    }
-
-    private void requestStats() {
+        Packet pkt = new Packet(PacketType.LIST_ROOMS, "");
         try {
-            Packet pkt = new Packet(PacketType.STATS_VIEW, "");
-            out.println(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(pkt));
-            // TODO: 응답 수신 → StatsController 로 전환
+            out.println(mapper.writeValueAsString(pkt));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    /** 비공개 방 입장 화면으로 전환 */
+    private void joinPrivateRoom() {
+        app.forwardTo("/fxml/PrivateRoomJoinView.fxml", null);
+    }
+
+    /** 내 정보(통계) 조회 요청 후 StatsController가 처리 */
+    private void requestStats() {
+        Packet pkt = new Packet(PacketType.STATS_VIEW, "");
+        try {
+            out.println(mapper.writeValueAsString(pkt));
         } catch (Exception ex) {
             ex.printStackTrace();
         }

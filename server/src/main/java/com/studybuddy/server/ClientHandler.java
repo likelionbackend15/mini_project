@@ -7,23 +7,26 @@ import com.studybuddy.common.domain.Room;
 import com.studybuddy.common.domain.User;
 import com.studybuddy.common.dto.CreateRoomReq;
 import com.studybuddy.common.dto.RoomInfo;
-import com.studybuddy.common.dto.RoomStats; // ★ 통계 DTO (있다고 가정)
+import com.studybuddy.common.dto.RoomStats;
 import com.studybuddy.server.dao.UserDAO;
 import com.studybuddy.server.util.MailUtil;
 import jakarta.mail.MessagingException;
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** 1명의 클라이언트와 통신하는 스레드 */
 public class ClientHandler implements Runnable {

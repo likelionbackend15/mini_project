@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studybuddy.client.net.ClientSocket;
 import com.studybuddy.client.net.PacketListener;
 import com.studybuddy.common.Packet;
-import com.studybuddy.common.PacketType;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -90,7 +89,7 @@ public class MainApp extends Application {
                     .get("action").asText();
 
             switch (action) {
-                case "LOGIN"      -> forwardTo("/fxml/LobbyView.fxml", pkt);
+                case "LOGIN"      -> forwardTo("/fxml/MyInfoView.fxml", pkt);
                 case "SIGNUP"     -> {            // 회원가입 완료
                     showAlert("회원가입 성공", "로그인 후 이용하세요");
                     forwardTo("/fxml/LoginView.fxml", pkt);
@@ -101,7 +100,7 @@ public class MainApp extends Application {
                 case "BACK_TO_LOBBY"
                         -> forwardTo("/fxml/LobbyView.fxml", pkt);
                 case "ROOM_STATS", "DOWNLOAD_CSV"
-                        -> forwardTo("/fxml/StatsView.fxml", pkt);
+                        -> forwardTo("/fxml/MyInfoView.fxml", pkt);
                 default -> {
                     // 여기로 오면 화면 전환이 필요 없는 ACK.
                     if (currentListener != null)   // ★ 추가

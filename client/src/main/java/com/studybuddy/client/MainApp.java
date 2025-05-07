@@ -90,14 +90,15 @@ public class MainApp extends Application {
                     .get("action").asText();
 
             switch (action) {
-                case "LOGIN"      -> forwardTo("/fxml/RoomCreateView.fxml", pkt);
+                case "LOGIN"      -> forwardTo("/fxml/LobbyView.fxml", pkt);
                 case "SIGNUP"     -> {            // 회원가입 완료
                     showAlert("회원가입 성공", "로그인 후 이용하세요");
                     forwardTo("/fxml/LoginView.fxml", pkt);
                 }
                 case "LIST_ROOMS" -> forwardTo("/fxml/RoomListView.fxml", pkt);
-                case "CREATE_ROOM", "JOIN_ROOM", "JOIN_PRIVATE"
-                        -> forwardTo("/fxml/StudyRoomView.fxml", pkt);
+                case "CREATE_ROOM"
+                        -> forwardTo("/fxml/RoomCreateView.fxml", pkt);
+                case "JOIN_PRIVATE" -> forwardTo("/fxml/PrivateRoomJoinView.fxml", pkt);
                 case "BACK_TO_LOBBY"
                         -> forwardTo("/fxml/LobbyView.fxml", pkt);
                 case "ROOM_STATS", "DOWNLOAD_CSV"

@@ -1,6 +1,7 @@
 package com.studybuddy.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.studybuddy.common.Packet;
 import com.studybuddy.common.PacketType;
 import com.studybuddy.common.domain.Room;
@@ -265,8 +266,17 @@ public class ClientHandler implements Runnable {
         try {
             curRoom = roomMgr.createRoom(dto, user);
             curRoom.addMember(this);    // 방장 본인
+
+            // ① 실제 RoomInfo DTO
             RoomInfo info = new RoomInfo(curRoom.getMeta(), curRoom.getMembers().size());
-            sendAck(mapper.writeValueAsString(info));
+
+            // ② action + info 래퍼 JSON 만들기
+            ObjectNode wrapper = mapper.createObjectNode();
+            wrapper.put("action", "CREATE_ROOM");
+            wrapper.set("info", mapper.valueToTree(info));
+
+            // ③ 래퍼로 ACK 전송
+            sendAck(mapper.writeValueAsString(wrapper));
         } catch (Exception e) {
             sendError("Create room failed: " + e.getMessage());
         }

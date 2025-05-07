@@ -1,5 +1,7 @@
 package com.studybuddy.common.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.studybuddy.common.domain.Room;
 
 /**
@@ -11,12 +13,16 @@ public class RoomInfo {
     private final Room meta;
     private final int  curMembers;
 
-    public RoomInfo(Room meta, int curMembers) {
+    @JsonCreator
+    public RoomInfo(
+            @JsonProperty("meta") Room meta,
+            @JsonProperty("curMembers") int curMembers
+    ) {
         this.meta       = meta;
         this.curMembers = curMembers;
     }
 
     //----- getters -----
-    public Room getMeta()        { return meta; }
-    public int  getCurMembers()  { return curMembers; }
+    public Room getMeta()       { return meta; }
+    public int  getCurMembers() { return curMembers; }
 }

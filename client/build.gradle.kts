@@ -9,6 +9,7 @@ dependencies {
     implementation("org.openjfx:javafx-controls:21.0.6")
     implementation("org.openjfx:javafx-fxml:21.0.6")
     implementation("org.openjfx:javafx-media:21.0.6")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
 }
 
 javafx {

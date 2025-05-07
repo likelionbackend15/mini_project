@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+           style="-fx-background-color: #f5f5f5;">
+
+    <VBox alignment="CENTER"
+          spacing="24"
+          StackPane.alignment="CENTER"
+          style="
+              -fx-background-color: white;
+              -fx-background-radius: 8;
+              -fx-padding: 40 50;
+              -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.22), 16, 0.12, 0, 4);
+          ">
+
+        <!-- 제목 -->
+        <Label text="Delete Account" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+
+        <!-- 안내문 -->
+        <Label text="Please enter your password to confirm" style="-fx-text-fill: #555;" />
+
+        <!-- 비밀번호 입력 -->
+        <VBox spacing="5">
+            <Label text="Password" />
+            <PasswordField fx:id="passwordField" promptText="Enter password" />
+        </VBox>
+
+        <!-- 경고 문구 -->
+        <Label text="This action cannot be undone."
+               style="-fx-text-fill: red; -fx-font-weight: bold;" />
+
+        <!-- 버튼 -->
+        <HBox alignment="CENTER" spacing="20">
+            <Button text="Cancel" fx:id="cancelButton"
+                    style="-fx-border-color: #ccc; -fx-background-color: white; -fx-font-weight: bold;" />
+            <Button text="Delete Account" fx:id="deleteButton"
+                    style="-fx-background-color: #e53935; -fx-text-fill: white; -fx-font-weight: bold;" />
+        </HBox>
+    </VBox>
+</StackPane>

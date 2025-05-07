@@ -92,7 +92,7 @@ public class MainApp extends Application {
             String action = root.path("action").asText();
 
             switch (action) {
-                case "LOGIN"      -> forwardTo("/fxml/RoomCreateView.fxml", pkt);
+                case "LOGIN"      -> forwardTo("/fxml/RoomListView.fxml", pkt);
                 case "SIGNUP"     -> {            // 회원가입 완료
                     showAlert("회원가입 성공", "로그인 후 이용하세요");
                     forwardTo("/fxml/LoginView.fxml", pkt);

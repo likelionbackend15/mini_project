@@ -80,27 +80,24 @@ public class LoginController implements PacketListener {
         if (pkt.type() != PacketType.ACK) return;
 
         try {
-
             JsonNode root = mapper.readTree(pkt.payloadJson());
             String action = root.path("action").asText();
 
             if ("LOGIN".equals(action)) {
-                // 서버가 보낸 user 객체 파싱
+                // 1) User 세션 저장
                 User u = mapper.treeToValue(root.get("user"), User.class);
-
-                // 전역 세션에 저장
                 UserSession.getInstance().setUser(u);
 
-                // 메인 스레드에서 로비로 화면 전환
+                // 2) 화면 전환: LobbyVIew
                 Platform.runLater(() ->
-                        app.forwardTo("/fxml/RoomCreateView.fxml", null)
+                        app.forwardTo("/fxml/LobbyView.fxml", null)
                 );
             }
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-
     }
+
 
     @Override
     public void onError(Exception e) {

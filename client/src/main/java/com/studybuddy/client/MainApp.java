@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studybuddy.client.net.ClientSocket;
 import com.studybuddy.client.net.PacketListener;
 import com.studybuddy.common.Packet;
-import com.studybuddy.common.PacketType;
+import com.studybuddy.common.util.JsonUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -24,7 +24,7 @@ public class MainApp extends Application {
     private PacketListener currentListener;
 
     private Stage primaryStage;                      // → start()에서 저장
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = JsonUtil.mapper();
 
     /* ==================== JavaFX 진입점 ==================== */
     @Override
@@ -96,8 +96,9 @@ public class MainApp extends Application {
                     forwardTo("/fxml/LoginView.fxml", pkt);
                 }
                 case "LIST_ROOMS" -> forwardTo("/fxml/RoomListView.fxml", pkt);
-                case "CREATE_ROOM", "JOIN_ROOM", "JOIN_PRIVATE"
-                        -> forwardTo("/fxml/StudyRoomView.fxml", pkt);
+                case "CREATE_ROOM"
+                        -> forwardTo("/fxml/RoomCreateView.fxml", pkt);
+                case "JOIN_PRIVATE" -> forwardTo("/fxml/PrivateRoomJoinView.fxml", pkt);
                 case "BACK_TO_LOBBY"
                         -> forwardTo("/fxml/LobbyView.fxml", pkt);
                 case "ROOM_STATS", "DOWNLOAD_CSV"

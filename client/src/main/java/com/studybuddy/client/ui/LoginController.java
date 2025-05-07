@@ -5,6 +5,7 @@ import com.studybuddy.client.MainApp;
 import com.studybuddy.client.net.PacketListener;
 import com.studybuddy.common.Packet;
 import com.studybuddy.common.PacketType;
+import com.studybuddy.common.util.JsonUtil;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -17,10 +18,10 @@ import java.net.Socket;
 
 public class LoginController implements PacketListener {
 
-    @FXML private TextField     usernameField;
+    @FXML private TextField idField;
     @FXML private PasswordField passwordField;
     @FXML private Button        loginButton;
-    @FXML private Text          errorText;
+    @FXML private Label errorLabel;
     @FXML private Hyperlink     signUpLink;
     @FXML private Hyperlink forgotPasswordLink;
 
@@ -49,21 +50,21 @@ public class LoginController implements PacketListener {
     public void setWriter(PrintWriter out) { this.out = out; }
     public void setApp(MainApp app)        { this.app = app; app.addScreenListener(this); }
 
-    /* === 로그인 버튼 === */
+    /* 로그인 패킷 전송 ----------------------------------------------------- */
     private void doLogin() {
         try {
             String payload = String.format(
-                    "{\"username\":\"%s\",\"password\":\"%s\"}",
-                    usernameField.getText(), passwordField.getText());
+                    "{\"id\":\"%s\",\"password\":\"%s\"}",
+                    idField.getText(), passwordField.getText());
 
-            out.println(mapper.writeValueAsString(
-                    new Packet(PacketType.LOGIN, payload)));
+            String json = JsonUtil.mapper().writeValueAsString(new Packet(PacketType.LOGIN, payload));
+            out.println(json);
         } catch (Exception ex) {
-            showError("로그인 요청 오류");
+            showError("로그인 요청 오류: " + ex.getMessage());
         }
     }
 
-    /* === PacketListener 구현 === */
+    /* 서버 응답 처리 -------------------------------------------------------- */
     @Override
     public void onPacket(Packet pkt) {
         if (pkt.type() != PacketType.ACK) return;
@@ -77,12 +78,15 @@ public class LoginController implements PacketListener {
                         UserSession.getInstance().setUser(u);
                 // 3) 메인 스레드에서 로비로 화면 전환
                         Platform.runLater(() ->
-                                app.forwardTo("/fxml/LobbyView.fxml", null));
+                                app.forwardTo("/fxml/RoomCreateView.fxml", null));
                            }
         } catch (Exception e) { e.printStackTrace(); }
     }
 
     @Override public void onError(Exception e) { showError(e.getMessage()); }
 
-    private void showError(String msg) { errorText.setText(msg); }
+    private void showError(String msg) {
+        errorLabel.setText(msg);
+        errorLabel.setVisible(true);
+    }
 }

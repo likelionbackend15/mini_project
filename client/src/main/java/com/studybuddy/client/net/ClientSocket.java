@@ -1,6 +1,7 @@
 package com.studybuddy.client.net;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.studybuddy.common.util.JsonUtil;
 import com.studybuddy.common.Packet;
 
 import java.io.BufferedReader;
@@ -19,7 +20,7 @@ public class ClientSocket {
     private Socket socket; // 서버랑 통신할 소켓
     private BufferedReader in; // 서버에서 들어오는 데이터 읽기
     private PrintWriter out; // 서버로 데이터 보내기
-    private final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = JsonUtil.mapper();
 
     /** 수신된 Packet 을 처리할 리스너 목록 */
     private final List<PacketListener> listeners = new CopyOnWriteArrayList<>();

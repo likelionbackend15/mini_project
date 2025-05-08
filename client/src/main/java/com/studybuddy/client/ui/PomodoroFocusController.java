@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import java.io.PrintWriter;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 뽀모도로 집중 화면 컨트롤러
@@ -38,6 +40,8 @@ public class PomodoroFocusController implements PacketListener {
     private final TimerModel timerModel = new TimerModel();
     private final ObservableList<String> participants = FXCollections.observableArrayList();
     private final ObservableList<String> chats        = FXCollections.observableArrayList();
+
+    private final Map<String,String> userMap = new HashMap<>();
 
     // 화면 초기화에 필요한 값
     private String roomId;
@@ -59,13 +63,20 @@ public class PomodoroFocusController implements PacketListener {
         participantsList.setItems(participants);
         chatList.setItems(chats);
 
-        // 2) 현재 사용자(방장) 미리 표시
-        String me = UserSession.getInstance().getCurrentUser().getUsername();
+        // 2) 현재 사용자 미리보기 (방장)  표시
+        String myId = UserSession.getInstance().getCurrentUser().getId();
+        String me   = UserSession.getInstance().getCurrentUser().getUsername();
         participants.clear();
-        participants.add(me + "  (Host)");
+        userMap.clear();
+        userMap.put(myId, me);
+        participants.add(String.format("%s(%s) - Host", me, myId));
 
+        // 버튼을 default 버튼으로 두고
         sendButton.setDefaultButton(true);
         sendButton.setOnAction(e -> sendChat());
+
+        // TextField 의 onAction 은 빈 상태로 둬서 ENTER 시 버튼만 한 번 클릭
+        messageField.setOnAction(null);
 
         // 폰트·사이즈
         timeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 48px;");
@@ -94,9 +105,11 @@ public class PomodoroFocusController implements PacketListener {
             // 참가자 초기화
             participants.clear();
             for (JsonNode u : root.withArray("members")) {
-                String who  = u.path("name").asText();
+                String id   = u.path("id").asText();
+                String name = u.path("name").asText();
                 String role = u.path("role").asText();
-                participants.add(String.format("%s  (%s)", who, role));
+                userMap.put(id, name);
+                participants.add(String.format("%s(%s) - %s", name, id, role));
             }
 
             // 타이머 초기 갱신
@@ -168,8 +181,11 @@ public class PomodoroFocusController implements PacketListener {
 
 
     private void addChat(String sender, String text) {
-        String time = LocalTime.now().format(TIME_FMT);
-        chats.add(String.format("%s  %s: %s", time, sender, text));
+        String time  = LocalTime.now().format(TIME_FMT);
+        String uname = userMap.getOrDefault(sender, "");
+
+        String disp = uname.isEmpty() ? sender : String.format("%s(%s)", uname, sender);
+        chats.add(String.format("%s  %s: %s", time, disp, text));
         // 스크롤을 마지막으로
         chatList.scrollTo(chats.size() - 1);
     }

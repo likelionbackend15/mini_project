@@ -59,10 +59,7 @@ public class MainApp extends Application {
 
     /** 새 화면 컨트롤러가 PacketListener라면 여기로 등록 */
     public void addScreenListener(PacketListener l) {
-        if (currentListener != null)
-            clientSocket.removeListener(currentListener);
         currentListener = l;
-        clientSocket.addListener(l);
     }
 
     /** Packet 분배 (ACK → 화면전환, 실시간 이벤트 → currentListener) */

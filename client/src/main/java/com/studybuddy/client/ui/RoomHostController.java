@@ -109,6 +109,7 @@ public class RoomHostController implements PacketListener {
         members.clear();
         var current = UserSession.getInstance().getCurrentUser();
         members.add(new Member(
+                current.getId(),
                 current.getUsername(),     // User 도메인에 있는 닉네임
                 "Host"
         ));
@@ -120,7 +121,7 @@ public class RoomHostController implements PacketListener {
             String uname = u.path("name").asText();
             // role 결정 (meta.hostId 와 비교)
             String role = uid.equals(meta.path("hostId").asText()) ? "Host" : "Member";
-            members.add(new Member(uname, role));
+            members.add(new Member(uid,uname, role));
         }
 
         // 6) 참가자 수: info.curMembers / meta.maxMembers
@@ -147,6 +148,7 @@ public class RoomHostController implements PacketListener {
             for (Member m : members) {
                 membersArray.add(
                         JsonUtil.mapper().createObjectNode()
+                                .put("id",   m.idProperty().get())
                                 .put("name", m.nameProperty().get())
                                 .put("role", m.roleProperty().get())
                 );
@@ -191,13 +193,28 @@ public class RoomHostController implements PacketListener {
 
     /** TableView 모델 */
     public static class Member {
+        private final javafx.beans.property.SimpleStringProperty id;    // ← 추가
         private final javafx.beans.property.SimpleStringProperty name;
         private final javafx.beans.property.SimpleStringProperty role;
-        public Member(String name, String role) {
+
+        // 기존 생성자 대신 id까지 받도록 변경
+        public Member(String id, String name, String role) {
+            this.id   = new javafx.beans.property.SimpleStringProperty(id);
             this.name = new javafx.beans.property.SimpleStringProperty(name);
             this.role = new javafx.beans.property.SimpleStringProperty(role);
         }
-        public javafx.beans.property.StringProperty nameProperty() { return name; }
-        public javafx.beans.property.StringProperty roleProperty() { return role; }
+
+        // id 접근자 추가
+        public javafx.beans.property.StringProperty idProperty() {
+            return id;
+        }
+
+        public javafx.beans.property.StringProperty nameProperty() {
+            return name;
+        }
+        public javafx.beans.property.StringProperty roleProperty() {
+            return role;
+        }
     }
+
 }

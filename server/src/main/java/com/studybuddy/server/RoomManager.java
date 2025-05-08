@@ -10,7 +10,10 @@ import com.studybuddy.server.dao.LogDAO;
 import com.studybuddy.server.dao.RoomDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.studybuddy.common.dto.RoomInfo;
 
+import java.sql.SQLException;
+import java.util.stream.Collectors;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -38,8 +41,23 @@ public class RoomManager {
     }
 
     /** 로비에 보여줄 OPEN 방 목록 */
-    public List<Room> listOpenRooms() throws Exception {
-        return roomDao.findOpenRooms();
+//    public List<Room> listOpenRooms() throws Exception {
+//        return roomDao.findOpenRooms();
+//    }
+
+    public List<RoomInfo> listOpenRooms() throws SQLException {
+        List<Room> rooms = roomDao.findOpenRooms();
+        return rooms.stream().map(r -> {
+            RoomSession session = sessions.get(r.getRoomId());
+            int curMembers = session != null ? session.getMembers().size() : 0;
+            String displayName = (r.getPassword() != null && !r.getPassword().isEmpty())
+                    ? "🔒 " + r.getName() : r.getName();
+
+            return new RoomInfo(
+                    r.getRoomId(), displayName, curMembers, r.getMaxMembers(),
+                    r.getLoops(), r.getStatus().name(), r.isAllowMidEntry(), r.getHostId()
+            );
+        }).collect(Collectors.toList());
     }
 
     /** 방 생성 */

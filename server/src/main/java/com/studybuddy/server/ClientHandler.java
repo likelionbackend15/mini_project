@@ -251,7 +251,7 @@ public class ClientHandler implements Runnable {
     /** 로비 방 목록 */
     private void handleListRooms() {
         try {
-            List<Room> list = roomMgr.listOpenRooms();
+            List<RoomInfo> list = roomMgr.listOpenRooms();
             sendAck(mapper.writeValueAsString(list));
         } catch (Exception e) {
             sendError("List rooms failed: " + e.getMessage());

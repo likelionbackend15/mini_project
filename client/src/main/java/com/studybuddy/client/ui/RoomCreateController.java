@@ -81,7 +81,11 @@ public class RoomCreateController implements PacketListener {
             Packet pkt = new Packet(PacketType.CREATE_ROOM, payload);
             String jsonPkt = JsonUtil.mapper().writeValueAsString(pkt);
             log.debug("🛫 sending Packet: {}", jsonPkt);
+
+            // 서버로 즉시 전송하도록 반드시 flush() 호출
             out.println(jsonPkt);
+            out.flush();
+
         } catch (Exception ex) {
             Platform.runLater(() -> {
                 errorText.setText("방 생성 오류: " + ex.getMessage());
@@ -89,6 +93,8 @@ public class RoomCreateController implements PacketListener {
             });
         }
     }
+
+
 
     @Override
     public void onPacket(Packet pkt) {
@@ -126,8 +132,6 @@ public class RoomCreateController implements PacketListener {
             }
         });
     }
-
-
 
 
     @Override

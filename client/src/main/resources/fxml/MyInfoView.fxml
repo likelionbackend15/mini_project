@@ -49,6 +49,12 @@
                 style="-fx-background-color: #e53935; -fx-text-fill: white; -fx-font-weight: bold;"
                 maxWidth="200" />
 
+        <!-- Back 버튼 -->
+        <Button fx:id="cancelButton"
+                text="Back"
+                style="-fx-background-color: white; -fx-text-fill: #cccccc; -fx-font-weight: bold;"
+                maxWidth="200" />
+
     </VBox>
 
 </VBox>

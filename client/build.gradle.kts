@@ -9,7 +9,6 @@ dependencies {
     implementation("org.openjfx:javafx-controls:21.0.6")
     implementation("org.openjfx:javafx-fxml:21.0.6")
     implementation("org.openjfx:javafx-media:21.0.6")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
 }
 
 javafx {
@@ -28,7 +27,7 @@ application {
 }
 
 tasks.withType<JavaExec>().configureEach {
-    val fxLib = "/Users/songchiho/Library/Java/JavaVirtualMachines/javafx-sdk-21.0.6/lib"
+    val fxLib = "/Library/Java/Mylib/javafx-sdk-21.0.6/lib"
     /*
     *                 위의 fx주소 꼭 각자 환경에 맞게 수정하시고 gradle reload 하세요!!!!!!!
     *

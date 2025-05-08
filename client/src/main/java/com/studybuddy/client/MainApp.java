@@ -97,7 +97,6 @@ public class MainApp extends Application {
         }
     }
 
-
     /** FXML → 컨트롤러 초기화 → Scene 전환 */
     public void forwardTo(String fxml, Packet firstPkt) {
         try {

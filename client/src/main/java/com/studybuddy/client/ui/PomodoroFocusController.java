@@ -34,7 +34,6 @@ public class PomodoroFocusController implements PacketListener {
     @FXML private TextField messageField;
     @FXML private Button sendButton;
 
-    private MainApp app;
     private PrintWriter out;
     private final TimerModel timerModel = new TimerModel();
     private final ObservableList<String> participants = FXCollections.observableArrayList();
@@ -45,28 +44,36 @@ public class PomodoroFocusController implements PacketListener {
     private int totalFocusSec;
     private int totalLoops;
     private int currentLoop;
+    private int focusMin, breakMin;
+    private int totalBreakSec;
 
-    private static final Logger log = LoggerFactory.getLogger(PomodoroFocusController.class);
     private static final DateTimeFormatter TIME_FMT =
             DateTimeFormatter.ofPattern("HH:mm");
 
+    private static final Logger log =
+            LoggerFactory.getLogger(PomodoroFocusController.class);
+
     @FXML
     public void initialize() {
+        // 1) 리스트뷰 바인딩
         participantsList.setItems(participants);
         chatList.setItems(chats);
 
-        // 채팅 보내기
+        // 2) 현재 사용자(방장) 미리 표시
+        String me = UserSession.getInstance().getCurrentUser().getUsername();
+        participants.clear();
+        participants.add(me + "  (Host)");
+
+        sendButton.setDefaultButton(true);
         sendButton.setOnAction(e -> sendChat());
-        messageField.setOnAction(e -> sendChat());
+
+        // 폰트·사이즈
+        timeLabel.setStyle("-fx-text-fill: white; -fx-font-size: 48px;");
+        cycleLabel.setStyle("-fx-text-fill: white; -fx-font-size: 20px;");
     }
 
-    /** MainApp 에서 주입됩니다. */
-    public void setApp(MainApp app) {
-        this.app = app;
-        app.addScreenListener(this);
-    }
 
-    /** MainApp 에서 주입됩니다. */
+    /** MainApp이 자동 주입 */
     public void setWriter(PrintWriter out) {
         this.out = out;
     }
@@ -75,19 +82,24 @@ public class PomodoroFocusController implements PacketListener {
     public void setInitData(Packet initPkt) {
         try {
             JsonNode root = JsonUtil.mapper().readTree(initPkt.payloadJson());
-            // ex) payload: { roomId, focusSec, loopIdx, totalLoops, members: [...] }
             roomId        = root.path("roomId").asText();
+
+            // 서버가 준 초(seconds) 단위로 읽어서 저장
             totalFocusSec = root.path("focusSec").asInt();
-            currentLoop   = root.path("loopIdx").asInt();
+            totalBreakSec = root.path("breakSec").asInt();      // ← 추가
+
             totalLoops    = root.path("totalLoops").asInt();
+            currentLoop   = root.path("loopIdx").asInt();
+
             // 참가자 초기화
             participants.clear();
             for (JsonNode u : root.withArray("members")) {
-                String who = u.path("name").asText();
-                String role= u.path("role").asText();
-                participants.add(who + "  (" + role + ")");
+                String who  = u.path("name").asText();
+                String role = u.path("role").asText();
+                participants.add(String.format("%s  (%s)", who, role));
             }
-            // 화면 갱신: 타이머·사이클
+
+            // 타이머 초기 갱신
             updateTimer(root.path("remainingSec").asInt());
         } catch (Exception ex) {
             log.error("초기 데이터 처리 실패", ex);
@@ -98,24 +110,19 @@ public class PomodoroFocusController implements PacketListener {
     public void onPacket(Packet pkt) {
         try {
             JsonNode root = JsonUtil.mapper().readTree(pkt.payloadJson());
+
             switch (pkt.type()) {
-                case TIMER_FOCUS_START -> {
-                    Platform.runLater(() -> {
-                        currentLoop = root.path("loopIdx").asInt();
-                        updateTimer(root.path("remainingSec").asInt());
-                    });
-                }
-                case TIMER_TICK -> {
-                    Platform.runLater(() ->
-                            updateTimer(root.path("remainingSec").asInt())
-                    );
-                }
-                case CHAT -> {
-                    Platform.runLater(() ->
-                            addChat(root.path("sender").asText(),
-                                    root.path("text").asText())
-                    );
-                }
+                // 서버 브로드캐스트된 남은 시간 갱신
+                case TIMER_TICK -> Platform.runLater(() ->
+                        updateTimer(root.path("remainingSec").asInt())
+                );
+
+                // 채팅
+                case CHAT -> Platform.runLater(() ->
+                        addChat(root.path("sender").asText(),
+                                root.path("text").asText())
+                );
+
                 default -> { /* 무시 */ }
             }
         } catch (Exception ex) {
@@ -124,30 +131,32 @@ public class PomodoroFocusController implements PacketListener {
     }
 
     private void updateTimer(int remainingSec) {
-        // 모델 업데이트
-        timerModel.setRemainingSec(remainingSec);
-        // UI 갱신
-        timeLabel.setText(timerModel.getFormattedTime());
-        progressIndicator.setProgress(
-                (double) remainingSec / totalFocusSec
-        );
-        cycleLabel.setText(
-                String.format("Cycle %d of %d · %d min focus",
-                        currentLoop, totalLoops, totalFocusSec / 60)
-        );
+        // 1) 남은 시간 MM:SS 표시
+        int mins = remainingSec / 60;
+        int secs = remainingSec % 60;
+        timeLabel.setText(String.format("%02d:%02d", mins, secs));
+
+        // 2) 프로그레스 인디케이터 (focus total 대비)
+        progressIndicator.setProgress((double) remainingSec / totalFocusSec);
+
+        // 3) 사이클·포커스·브레이크 표시
+        int focusMin = totalFocusSec / 60;
+        int breakMin = totalBreakSec / 60;
+        cycleLabel.setText(String.format(
+                "Cycle %d of %d · %d min focus · %d min break",
+                currentLoop, totalLoops, focusMin, breakMin
+        ));
     }
 
     private void sendChat() {
         String text = messageField.getText().trim();
         if (text.isEmpty()) return;
+
         try {
-            // sender 필드를 getId() 로 대체
             String sender = UserSession.getInstance().getCurrentUser().getId();
             String payload = String.format(
                     "{\"roomId\":\"%s\",\"sender\":\"%s\",\"text\":\"%s\"}",
-                    roomId,
-                    sender,
-                    text
+                    roomId, sender, text
             );
             Packet chatPkt = new Packet(PacketType.CHAT, payload);
             out.println(JsonUtil.mapper().writeValueAsString(chatPkt));

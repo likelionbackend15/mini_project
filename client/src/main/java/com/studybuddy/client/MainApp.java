@@ -136,14 +136,27 @@ public class MainApp extends Application {
                 addScreenListener(pl);
             }
 
-            // 첫 패킷 전달
+            // 첫 패킷 전달: 컨트롤러에 setInitData(Packet) 메서드가 있으면 호출
             if (firstPkt != null) {
                 try {
+                    // 1) setInitData(Packet) 우선 시도
                     ctrl.getClass()
-                            .getMethod("onPacket", Packet.class)
+                            .getMethod("setInitData", Packet.class)
                             .invoke(ctrl, firstPkt);
-                } catch (NoSuchMethodException ignored) {}
-            }
+                } catch (NoSuchMethodException ignored) {
+                    // 2) 없으면 기존처럼 onPacket(Packet) 호출
+                    try {
+                        ctrl.getClass()
+                                .getMethod("onPacket", Packet.class)
+                                .invoke(ctrl, firstPkt);
+                                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                                    }
+                    } catch (Exception ex) {
+                    ex.printStackTrace();
+                    }
+                }
+
 
             primaryStage.setScene(scene);
             primaryStage.show();

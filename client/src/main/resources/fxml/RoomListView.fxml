@@ -1,51 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.text.Text?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="500" prefWidth="600" style="-fx-background-color: #ffffff;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.client.ui.RoomListController">
-    <children>
+<StackPane xmlns="http://javafx.com/javafx/20"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.studybuddy.client.ui.RoomListController"
+           style="-fx-background-color: linear-gradient(to bottom, #d7d7d7, #f4f4f4);">
 
-        <!-- Title -->
-        <Label layoutX="245.0" layoutY="22.0" style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1f2937;" text="Room List" />
+    <VBox alignment="CENTER"
+          spacing="20"
+          style="-fx-background-color: white; -fx-background-radius: 8; -fx-padding: 30 40;
+                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0, 0, 3);">
 
-        <!-- Table -->
-        <TableView fx:id="roomTable" layoutX="50" layoutY="70" prefHeight="320" prefWidth="500" style="-fx-font-size: 14px; -fx-border-color: #d1d5db; -fx-border-radius: 8px; -fx-background-radius: 8px;">
+        <!-- 타이틀 -->
+        <Label text="Study Room List"
+               style="-fx-font-size: 24; -fx-font-weight: bold;"/>
+
+        <!-- 방 목록 테이블 -->
+        <TableView fx:id="roomTable" prefWidth="860" prefHeight="320">
             <columns>
-                <TableColumn fx:id="nameColumn" prefWidth="120" text="Name" />
-                <TableColumn fx:id="hostColumn" prefWidth="80" text="Host" />
-                <TableColumn fx:id="usersColumn" prefWidth="70" text="Users" />
-                <TableColumn fx:id="timerColumn" prefWidth="100" text="Timer" />
-                <TableColumn fx:id="statusColumn" prefWidth="70" text="Status" />
-                <TableColumn fx:id="joinColumn" prefWidth="60" text="Join" />
+                <TableColumn fx:id="nameCol" text="Room Name" prefWidth="140"/>
+                <TableColumn fx:id="hostCol" text="Host ID" prefWidth="100"/>
+                <TableColumn fx:id="statusCol" text="Status" prefWidth="100"/>
+                <TableColumn fx:id="curCol" text="Current" prefWidth="80"/>
+                <TableColumn fx:id="maxCol" text="Max" prefWidth="80"/>
+                <TableColumn fx:id="loopsCol" text="Cycles" prefWidth="80"/>
+                <TableColumn fx:id="midEntryCol" text="Mid Entry" prefWidth="100"/>
             </columns>
         </TableView>
 
-        <!-- Button -->
+        <!-- 오류 메시지 -->
+        <Text fx:id="errorText" fill="red" visible="false"/>
 
-        <Button layoutX="230" layoutY="410"  prefHeight="41.0" prefWidth="153.0" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 6 12 6 12;                        -fx-background-radius: 8px; -fx-cursor: hand;" text="Back to Lobby" />
-
-        <!-- join 버튼은 자바 코드에서 동적으로 controller에서 동적으로 만들어줘야 합니다  -->
-
-
-        <!-- 에러 텍스트 -->
-        <Text fx:id="errorText" layoutX="50" layoutY="400" style="-fx-fill: red;" />
-
-        <!-- 새로고침 버튼 -->
-        <Button fx:id="refreshButton" layoutX="420" layoutY="410" prefHeight="40" prefWidth="100"
-                style="-fx-background-color: #10b981; -fx-text-fill: white;" text="Refresh" />
-
-        <!-- 참여 버튼 -->
-        <Button fx:id="joinButton" layoutX="100" layoutY="410" prefHeight="40" prefWidth="100"
-                style="-fx-background-color: #f59e0b; -fx-text-fill: white;" text="Join" />
-
-        <!-- 뒤로가기 버튼 -->
-        <Button fx:id="backButton" layoutX="230" layoutY="410" prefHeight="40" prefWidth="150"
-                style="-fx-background-color: #3b82f6; -fx-text-fill: white;" text="Back to Lobby" />
-
-    </children>
-</AnchorPane>
+        <!-- 버튼 그룹 -->
+        <HBox spacing="15" alignment="CENTER">
+            <Button fx:id="refreshButton" text="Refresh"
+                    style="-fx-background-color: #0d6efd; -fx-text-fill: white;
+                           -fx-padding: 8 20; -fx-background-radius: 6;"/>
+            <Button fx:id="joinButton" text="Join"
+                    style="-fx-background-color: #198754; -fx-text-fill: white;
+                           -fx-padding: 8 20; -fx-background-radius: 6;"/>
+            <Button fx:id="backButton" text="Back"
+                    style="-fx-background-color: #6c757d; -fx-text-fill: white;
+                           -fx-padding: 8 20; -fx-background-radius: 6;"/>
+        </HBox>
+    </VBox>
+</StackPane>

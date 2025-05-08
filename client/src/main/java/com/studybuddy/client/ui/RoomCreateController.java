@@ -106,11 +106,9 @@ public class RoomCreateController implements PacketListener {
 
                     // 2) CREATE_ROOM 액션만 처리 → RoomHostView로 이동
                     if ("CREATE_ROOM".equals(action)) {
-                        JsonNode infoNode = root.get("info");
-                        Packet infoPkt = new Packet(PacketType.ACK, infoNode.toString());
-                        app.forwardTo("/fxml/RoomHostView.fxml", infoPkt);
+                        app.forwardTo("/fxml/RoomHostView.fxml", pkt);
                     }
-                    // (필요하다면 다른 ACK 액션도 여기에 추가)
+
 
                 } catch (Exception ex) {
                     errorText.setText("응답 처리 오류: " + ex.getMessage());

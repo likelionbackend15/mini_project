@@ -1,207 +1,141 @@
 package com.studybuddy.client.ui;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.studybuddy.common.util.JsonUtil;
 import com.studybuddy.client.MainApp;
+import com.studybuddy.client.model.UserSession;
 import com.studybuddy.client.net.PacketListener;
 import com.studybuddy.common.Packet;
 import com.studybuddy.common.PacketType;
-import com.studybuddy.common.dto.RoomInfo;
-import com.studybuddy.common.domain.Room;
-import com.studybuddy.common.util.JsonUtil;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.Pane;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 
 /**
- * 방장 전용 입장 화면 + 설정 패널까지 한 컨트롤러에서 관리
+ * 방장 대기 화면 컨트롤러
+ * - CREATE_ROOM, ROOM_UPDATE 패킷을 통해 참가자 목록 갱신
+ * - TIMER_FOCUS_START 패킷 전송으로 포커드 시작 명령
  */
 public class RoomHostController implements PacketListener {
-    private final ObjectMapper mapper = JsonUtil.mapper();
-    private PrintWriter out;
+    @FXML private Label roomNameLabel;
+    @FXML private Label statusLabel;
+    @FXML private Label countLabel;
+    @FXML private TableView<Member> membersTable;
+    @FXML private TableColumn<Member, String> nameCol;
+    @FXML private TableColumn<Member, String> roleCol;
+    @FXML private Button startButton;
+
+    private final ObservableList<Member> members = FXCollections.observableArrayList();
     private MainApp app;
+    private PrintWriter out;       // ← 클라이언트로 보낼 아웃풋
+    private String roomId;
+    private int maxMembers;
 
-    private RoomInfo roomInfo;
-
-    // --- 뷰 컴포넌트 ---
-    @FXML private Label roomNameLabel, hostLabel, statusLabel, participantsLabel;
-    @FXML private TableView<ParticipantRow> participantsTable;
-    @FXML private TableColumn<ParticipantRow,String> nameCol, roleCol;
-    @FXML private Button lockWaitButton, startFocusButton, editSettingsButton;
-
-    // --- 설정 패널 컴포넌트 ---
-    @FXML private Pane settingsOverlay;
-    @FXML private Spinner<Integer> maxMembersSpinner;
-    @FXML private Spinner<Integer> focusSpinner;
-    @FXML private Spinner<Integer> breakSpinner;
-    @FXML private Spinner<Integer> loopsSpinner;
-    @FXML private CheckBox midEntryBox;
-    @FXML private PasswordField passwordField;
-    @FXML private Button applyButton;
-    @FXML private Label errorLabel;
+    private static final Logger log = LoggerFactory.getLogger(RoomHostController.class);
 
     @FXML
     public void initialize() {
-        // 참가자 테이블 초기화
-        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
-        roleCol.setCellValueFactory(new PropertyValueFactory<>("role"));
+        nameCol.setCellValueFactory(cell -> cell.getValue().nameProperty());
+        roleCol.setCellValueFactory(cell -> cell.getValue().roleProperty());
+        membersTable.setItems(members);
 
-        // 버튼 비활성
-        lockWaitButton.setDisable(true);
-        startFocusButton.setDisable(true);
-        editSettingsButton.setDisable(true);
-
-        // 설정 패널 초기화
-        settingsOverlay.setVisible(false);
-        initSpinners();
+        startButton.setOnAction(e -> sendStart());
     }
 
-    private void initSpinners() {
-        maxMembersSpinner.setValueFactory(
-                new SpinnerValueFactory.IntegerSpinnerValueFactory(2, 20, 8));
-        focusSpinner.setValueFactory(
-                new SpinnerValueFactory.IntegerSpinnerValueFactory(5, 120, 25));
-        breakSpinner.setValueFactory(
-                new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 60, 5));
-        loopsSpinner.setValueFactory(
-                new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10, 4));
-
-        passwordField.setDisable(true);
-        midEntryBox.selectedProperty().addListener((o,oldV,newV)->
-                passwordField.setDisable(!newV));
-        errorLabel.setVisible(false);
-    }
-
-    public void setWriter(PrintWriter out) {
-        this.out = out;
-    }
+    /** MainApp 에서 주입됩니다. */
     public void setApp(MainApp app) {
         this.app = app;
         app.addScreenListener(this);
     }
 
+    /** MainApp 에서 주입됩니다. */
+    public void setWriter(PrintWriter out) {
+        this.out = out;
+    }
+
     @Override
     public void onPacket(Packet pkt) {
-        if (pkt.type() == PacketType.ACK && roomInfo == null) {
-            Platform.runLater(() -> {
-                try {
-                    // 1) wrapper 전체를 트리로 읽고
-                    JsonNode root = mapper.readTree(pkt.payloadJson());
-                    // 2) info 노드만 꺼내서
-                    JsonNode infoNode = root.has("info") ? root.get("info") : root;
-                    // 3) RoomInfo 로 역직렬화
-                    roomInfo = mapper.treeToValue(infoNode, RoomInfo.class);
-                    // 4) 화면 갱신
-                    updateView();
-                } catch (Exception ex) {
-                    showError("방 정보 오류: " + ex.getMessage());
-                }
-            });
-        }
-        else if (pkt.type() == PacketType.ERROR) {
-            Platform.runLater(() -> {
-                String msg;
-                try {
-                    msg = mapper.readTree(pkt.payloadJson())
-                            .path("message").asText();
-                } catch (JsonProcessingException e) {
-                    msg = "알 수 없는 오류";
-                }
-                showError(msg);
-            });
+        // Packet.type() 과 payloadJson() 사용
+        if (pkt.type() != PacketType.ACK) return;
+        try {
+            JsonNode root = JsonUtil.mapper().readTree(pkt.payloadJson());
+            String action = root.path("action").asText();
+
+            // 방 생성 또는 참가자 업데이트
+            if ("CREATE_ROOM".equals(action) || "ROOM_UPDATE".equals(action)) {
+                Platform.runLater(() -> updateRoomInfo(root));
+
+                // 서버가 집중 세션 시작을 승인했을 때
+            } else if ("TIMER_FOCUS_START".equals(action)) {
+                Platform.runLater(() ->
+                        app.forwardTo("/fxml/PomodoroFocusView.fxml", pkt)
+                );
+            }
+        } catch (Exception ex) {
+            log.error("패킷 처리 오류", ex);
         }
     }
 
+    private void updateRoomInfo(JsonNode root) {
+        JsonNode info = root.get("info");
+        roomId     = info.path("roomId").asText();
+        roomNameLabel.setText(info.path("name").asText());
+        maxMembers = info.path("maxMembers").asInt();
+
+        statusLabel.setText(info.path("status").asText());
+
+        members.clear();
+        for (JsonNode u : root.withArray("members")) {
+            String uid   = u.path("id").asText();
+            String uname = u.path("name").asText();
+            // getCurrentUser() 로 변경
+            boolean isHost = uid.equals(UserSession.getInstance().getCurrentUser().getId());
+            members.add(new Member(uname, isHost ? "Host" : "Member"));
+        }
+        countLabel.setText("Participants: " + members.size() + "/" + maxMembers);
+
+        // 방장만, 최소 1명 이상일 때 버튼 활성화
+        boolean iAmHost = UserSession.getInstance()
+                .getCurrentUser()
+                .getId()
+                .equals(info.path("hostId").asText());
+        startButton.setDisable(!(iAmHost && members.size() >= 1));
+    }
+
+    /** 집중 시작 명령 전송 */
+    private void sendStart() {
+        try {
+            Packet startPkt = new Packet(
+                    PacketType.TIMER_FOCUS_START,
+                    String.format("{\"roomId\":\"%s\"}", roomId)
+            );
+            // out 필드를 통해 전송
+            out.println(JsonUtil.mapper().writeValueAsString(startPkt));
+        } catch (Exception ex) {
+            log.error("TIMER_FOCUS_START 전송 실패", ex);
+        }
+    }
 
     @Override
     public void onError(Exception e) {
-        Platform.runLater(() -> showError("네트워크 오류: "+e.getMessage()));
+        log.error("네트워크 오류", e);
     }
 
-    private void updateView() {
-        Room meta = roomInfo.getMeta();
-        roomNameLabel.setText(meta.getName());
-        hostLabel.setText("Host: "+meta.getHostId());
-        statusLabel.setText(meta.getStatus().name());
-        participantsLabel.setText(
-                "Participants: "+roomInfo.getCurMembers()+" / "+meta.getMaxMembers()
-        );
-
-        participantsTable.getItems().setAll(
-                new ParticipantRow(meta.getHostId(), "Host")
-                // TODO: 실제 참가자들 추가
-        );
-
-        lockWaitButton.setDisable(false);
-        startFocusButton.setDisable(false);
-        editSettingsButton.setDisable(false);
-    }
-
-    @FXML
-    private void onLockWait() {
-        sendSimple("{\"roomId\":\""+roomInfo.getMeta().getRoomId()+"\"}",
-                PacketType.LOCK_ROOM);
-    }
-
-    @FXML
-    private void onStartFocus() {
-        sendSimple("{\"roomId\":\""+roomInfo.getMeta().getRoomId()+"\"}",
-                PacketType.TIMER_FOCUS_START);
-    }
-
-    private void sendSimple(String payload, PacketType type) {
-        try {
-            out.println(mapper.writeValueAsString(new Packet(type, payload)));
-        } catch (Exception e) {
-            showError("전송 오류: "+e.getMessage());
+    /** TableView 모델 */
+    public static class Member {
+        private final javafx.beans.property.SimpleStringProperty name;
+        private final javafx.beans.property.SimpleStringProperty role;
+        public Member(String name, String role) {
+            this.name = new javafx.beans.property.SimpleStringProperty(name);
+            this.role = new javafx.beans.property.SimpleStringProperty(role);
         }
-    }
-
-    /** 톱니바퀴 클릭하면 설정 패널 열기/닫기 */
-    @FXML
-    private void onToggleSettings() {
-        settingsOverlay.setVisible(!settingsOverlay.isVisible());
-    }
-
-    /** Apply 누르면 서버에 MODIFY_ROOM 요청 */
-    @FXML
-    private void onApplySettings() {
-        errorLabel.setVisible(false);
-        int cur = roomInfo.getCurMembers();
-        int max = maxMembersSpinner.getValue();
-        if (cur > max) {
-            errorLabel.setText("현재 참가자 수보다 큰 값을 입력하세요");
-            errorLabel.setVisible(true);
-            return;
-        }
-        String json = String.format(
-                "{\"roomId\":\"%s\",\"maxMembers\":%d,\"focusMin\":%d,"
-                        + "\"breakMin\":%d,\"loops\":%d,\"allowMidEntry\":%b,"
-                        + "\"password\":\"%s\"}",
-                roomInfo.getMeta().getRoomId(), max,
-                focusSpinner.getValue(), breakSpinner.getValue(),
-                loopsSpinner.getValue(), midEntryBox.isSelected(),
-                midEntryBox.isSelected()? passwordField.getText() : ""
-        );
-        sendSimple(json, PacketType.MODIFY_ROOM);
-        settingsOverlay.setVisible(false);
-    }
-
-    private void showError(String msg) {
-        Alert a = new Alert(Alert.AlertType.ERROR, msg, ButtonType.OK);
-        a.setHeaderText(null);
-        a.showAndWait();
-    }
-
-    public static class ParticipantRow {
-        private final String name, role;
-        public ParticipantRow(String n, String r) { name=n; role=r; }
-        public String getName(){return name;}
-        public String getRole(){return role;}
+        public javafx.beans.property.StringProperty nameProperty() { return name; }
+        public javafx.beans.property.StringProperty roleProperty() { return role; }
     }
 }

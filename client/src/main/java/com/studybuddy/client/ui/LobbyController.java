@@ -15,8 +15,9 @@ public class LobbyController {
     @FXML private Text welcomeText;
     @FXML private Button createRoomButton;
     @FXML private Button listRoomsButton;
-    @FXML private Button statsButton;
+
     @FXML private Button joinPrivateRoomButton;
+    @FXML private Button myInfoButton;
 
     private MainApp app;
     private PrintWriter out;
@@ -39,8 +40,9 @@ public class LobbyController {
 
         createRoomButton.setOnAction(e -> showCreateRoom());
         listRoomsButton.setOnAction(e -> showRoomList());
-        statsButton.setOnAction(e -> requestStats());
+
         joinPrivateRoomButton.setOnAction(e -> joinPrivateRoom());
+        myInfoButton.setOnAction(e -> showMyInfo());
     }
 
     /** 방 만들기 화면으로 전환 */
@@ -65,13 +67,10 @@ public class LobbyController {
         app.forwardTo("/fxml/PrivateRoomJoinView.fxml", null);
     }
 
-    /** 내 정보(통계) 조회 요청 후 StatsController가 처리 */
-    private void requestStats() {
-        Packet pkt = new Packet(PacketType.STATS_VIEW, "");
-        try {
-            out.println(mapper.writeValueAsString(pkt));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+
+
+    /** my info로 화면 전환  */
+    private void showMyInfo() {
+        app.forwardTo("/fxml/MyInfoView.fxml", null);
     }
 }

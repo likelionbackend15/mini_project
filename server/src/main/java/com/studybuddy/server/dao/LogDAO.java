@@ -97,11 +97,17 @@ public class LogDAO {
 
     public List<ChatMessage> findMessagesByRoom(String roomId) throws SQLException {
         String sql = """
-            SELECT msg_id, room_id, sender, content, sent_at
-            FROM chat_messages
-            WHERE room_id = ?
-            ORDER BY sent_at
-            """;
+        SELECT 
+            id AS msg_id, 
+            room_id, 
+            user_id, 
+            message AS content, 
+            created_at AS sent_at
+        FROM chat_messages
+        WHERE room_id = ?
+        ORDER BY created_at
+        """;
+
         List<ChatMessage> list = new ArrayList<>();
 
         try (Connection conn = DbUtil.getConn();
@@ -113,15 +119,17 @@ public class LogDAO {
                     list.add(new ChatMessage(
                             rs.getLong("msg_id"),
                             rs.getString("room_id"),
-                            rs.getString("sender"),
+                            rs.getString("user_id"),
                             rs.getString("content"),
                             rs.getTimestamp("sent_at").toLocalDateTime()
                     ));
                 }
             }
         }
+
         return list;
     }
+
 
     /* =========================================================
        4. 집계 쿼리 (누적 시간, 루프 수, 참여 인원)

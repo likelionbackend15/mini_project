@@ -1,5 +1,6 @@
 package com.studybuddy.server;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.studybuddy.common.Packet;
@@ -331,47 +332,79 @@ public class ClientHandler implements Runnable {
 
     /** 공개 방 입장 */
     private void handleJoinRoom(Packet p) throws IOException {
-        var req = mapper.readTree(p.payloadJson());
+        JsonNode req = mapper.readTree(p.payloadJson());
+
         try {
+            // 1. 방 입장 시도
+            curRoom = roomMgr.joinRoom(req.get("roomId").asText(), this);
 
-                        curRoom = roomMgr.joinRoom(req.get("roomId").asText(), this);
+            // 2. 이전 채팅 기록 불러오기
+            List<ChatMessage> history = logDao.findMessagesByRoom(curRoom.getMeta().getRoomId());
 
-                                // ——— 과거 채팅 불러오기 ———
-                                        List<ChatMessage> history =
-                                    logDao.findMessagesByRoom(curRoom.getMeta().getRoomId());
+            // 3. 클라이언트에게 보낼 초기 정보 생성
+            RoomInitResponse init = new RoomInitResponse(
+                    curRoom.getMeta().getRoomId(),
+                    curRoom.getMembers().size(),
+                    curRoom.getMeta().getMaxMembers(),
+                    curRoom.getMeta().getLoops(),
+                    curRoom.getMeta().getStatus().name(),
+                    curRoom.getMeta().isAllowMidEntry(),
+                    curRoom.getMeta().getHostId(),
+                    history
+            );
 
-                                RoomInitResponse init = new RoomInitResponse(
-                                  curRoom.getMeta().getRoomId(),
-                                  curRoom.getMembers().size(),
-                                  curRoom.getMeta().getMaxMembers(),
-                                  curRoom.getMeta().getLoops(),
-                                  curRoom.getMeta().getStatus().name(),
-                                  curRoom.getMeta().isAllowMidEntry(),
-                                  curRoom.getMeta().getHostId(),
-                                  history
-                                        );
-                        // 클라이언트 단독 전송
-                                sendPacket(new Packet(
-                                          PacketType.ROOM_INIT,
-                                          mapper.writeValueAsString(init)
-                                                ));
+            // 4. ROOM_INIT 전송
+            sendPacket(new Packet(PacketType.ROOM_INIT, mapper.writeValueAsString(init)));
+
+            // 5. ACK 응답 전송 → 클라이언트 forwardTo() 트리거
+            ObjectNode ack = mapper.createObjectNode();
+            ack.put("action", "JOIN_ROOM");
+            ack.put("roomId", req.get("roomId").asText());
+            sendPacket(new Packet(PacketType.ACK, mapper.writeValueAsString(ack)));
+
         } catch (Exception e) {
             sendError("Join failed: " + e.getMessage());
         }
     }
 
 
+
     /** 비공개 방 입장 */
     private void handleJoinPrivate(Packet p) throws IOException {
-        var r = mapper.readTree(p.payloadJson());
+        JsonNode req = mapper.readTree(p.payloadJson());
         try {
-            curRoom = roomMgr.joinPrivate(r.get("roomId").asText(),
-                    r.get("password").asText(), this);
-            sendAck("");
+            curRoom = roomMgr.joinPrivate(
+                    req.get("roomId").asText(),
+                    req.get("password").asText(),
+                    this);
+
+            List<ChatMessage> history = logDao.findMessagesByRoom(curRoom.getMeta().getRoomId());
+
+            RoomInitResponse init = new RoomInitResponse(
+                    curRoom.getMeta().getRoomId(),
+                    curRoom.getMembers().size(),
+                    curRoom.getMeta().getMaxMembers(),
+                    curRoom.getMeta().getLoops(),
+                    curRoom.getMeta().getStatus().name(),
+                    curRoom.getMeta().isAllowMidEntry(),
+                    curRoom.getMeta().getHostId(),
+                    history
+            );
+
+            // ✅ 초기 데이터 전송
+            sendPacket(new Packet(PacketType.ROOM_INIT, mapper.writeValueAsString(init)));
+
+            // ✅ 전환용 ACK 전송
+            ObjectNode ack = mapper.createObjectNode();
+            ack.put("action", "JOIN_PRIVATE");
+            ack.put("roomId", req.get("roomId").asText());
+            sendPacket(new Packet(PacketType.ACK, mapper.writeValueAsString(ack)));
+
         } catch (Exception e) {
             sendError("Private join failed: " + e.getMessage());
         }
     }
+
 
     /** 로비 복귀 */
     private void handleBackToLobby(Packet p) {

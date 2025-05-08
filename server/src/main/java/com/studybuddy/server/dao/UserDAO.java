@@ -117,6 +117,23 @@ public class UserDAO {
     }
 
     /* ─────────────────────────────────────────
+       계정  삭제
+    ───────────────────────────────────────── */
+    public boolean deleteAccount(String id) throws SQLException {
+        String sql = "DELETE FROM users WHERE id = ?";
+        int result = 0 ;
+
+        try (Connection conn = DbUtil.getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, id);
+            result = ps.executeUpdate();
+                return result >0 ;
+            }
+        }
+
+
+    /* ─────────────────────────────────────────
        6. ResultSet → User 매핑
     ───────────────────────────────────────── */
     private User mapRow(ResultSet rs) throws SQLException {

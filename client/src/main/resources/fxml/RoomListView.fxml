@@ -3,35 +3,36 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/20"
-            xmlns:fx="http://javafx.com/fxml"
+<BorderPane xmlns="http://javafx.com/javafx/21.0.1" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.studybuddy.client.ui.RoomListController">
 
-    <top>
-        <ToolBar>
-            <Button fx:id="refreshButton" text="새로고침"/>
-            <Button fx:id="joinButton" text="입장"/>
-            <Button fx:id="backButton" text="뒤로가기"/>
-        </ToolBar>
-    </top>
-
     <center>
-        <TableView fx:id="roomTable" prefWidth="600">
-            <columns>
-                <TableColumn fx:id="nameCol" text="방 이름" prefWidth="150"/>
-                <TableColumn fx:id="statusCol" text="상태" prefWidth="80"/>
-                <TableColumn fx:id="curCol" text="현재 인원" prefWidth="80"/>
-                <TableColumn fx:id="maxCol" text="최대 인원" prefWidth="80"/>
-                <TableColumn fx:id="loopsCol" text="반복 수" prefWidth="80"/>
-                <TableColumn fx:id="midEntryCol" text="중간입장" prefWidth="80"/>
-                <TableColumn fx:id="hostIdCol" text="방장 ID" prefWidth="100"/>
-            </columns>
-        </TableView>
-    </center>
+        <VBox spacing="12">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
 
-    <bottom>
-        <Text fx:id="errorText" fill="red" style="-fx-padding: 8;" />
-    </bottom>
+            <TableView fx:id="roomTable" prefHeight="400.0" prefWidth="800.0">
+                <columns>
+                    <TableColumn fx:id="nameCol" text="방 이름" prefWidth="180"/>
+                    <TableColumn fx:id="statusCol" text="상태" prefWidth="100"/>
+                    <TableColumn fx:id="curCol" text="현재 인원" prefWidth="100"/>
+                    <TableColumn fx:id="maxCol" text="최대 인원" prefWidth="100"/>
+                    <TableColumn fx:id="loopsCol" text="사이클 수" prefWidth="100"/>
+                    <TableColumn fx:id="midEntryCol" text="중간입장" prefWidth="100"/>
+                    <TableColumn fx:id="hostIdCol" text="Host ID" prefWidth="120"/>
+                </columns>
+            </TableView>
+
+            <Text fx:id="errorText" fill="red" wrappingWidth="800" visible="false"/>
+
+            <HBox spacing="16" alignment="CENTER">
+                <Button fx:id="refreshButton" text="새로고침" prefWidth="120"/>
+                <Button fx:id="joinButton" text="입장하기" prefWidth="120"/>
+                <Button fx:id="backButton" text="로비로" prefWidth="120"/>
+            </HBox>
+        </VBox>
+    </center>
 </BorderPane>

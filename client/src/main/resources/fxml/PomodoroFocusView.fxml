@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.studybuddy.client.ui.PomodoroFocusController"
+            prefWidth="800" prefHeight="600"
+            style="-fx-background-color: #1e1e2f;">
+
+    <!-- 상단 바 -->
+    <top>
+        <HBox alignment="CENTER_LEFT"
+              spacing="10"
+              style="-fx-background-color: #2a2a3d; -fx-padding: 8 12;">
+            <Label text="StudyBuddy Chat"
+                   style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <HBox spacing="4" alignment="CENTER_RIGHT">
+                <Circle radius="3" fill="white"/>
+                <Circle radius="3" fill="white"/>
+            </HBox>
+        </HBox>
+    </top>
+
+    <!-- 중앙 콘텐츠: 타이머 & 참가자 목록 -->
+    <center>
+        <HBox spacing="30" padding="20">
+            <!-- 타이머 영역 -->
+            <VBox alignment="CENTER" spacing="12" HBox.hgrow="ALWAYS">
+                <StackPane>
+                    <!-- 배경 원형 -->
+                    <Circle radius="80" style="-fx-fill: #2a2a3d;"/>
+                    <!-- 진행 원형 -->
+                    <ProgressIndicator fx:id="progressIndicator"
+                                       progress="0.0"
+                                       prefWidth="160" prefHeight="160"/>
+                    <!-- 텍스트 겹치기 -->
+                    <VBox alignment="CENTER">
+                        <Label text="Focus"
+                               style="-fx-text-fill: white; -fx-font-size: 16px;"/>
+                        <Label fx:id="timeLabel"
+                               text="25:00"
+                               style="-fx-text-fill: white; -fx-font-size: 36px;"/>
+                    </VBox>
+                </StackPane>
+                <Label fx:id="cycleLabel"
+                       text="Cycle 1 of 4 · 25 min focus"
+                       style="-fx-text-fill: white; -fx-font-size: 14px;"/>
+            </VBox>
+
+            <!-- 참가자 목록 영역 -->
+            <VBox spacing="8" alignment="TOP_LEFT" prefWidth="200">
+                <Label text="Participants"
+                       style="-fx-text-fill: white; -fx-font-size: 14px; -fx-underline: true;"/>
+                <ListView fx:id="participantsList"
+                          style="-fx-background-color: #2a2a3d; -fx-control-inner-background: #2a2a3d;"/>
+            </VBox>
+        </HBox>
+    </center>
+
+    <!-- 하단 채팅 영역 -->
+    <bottom>
+        <VBox spacing="6" padding="10">
+            <ListView fx:id="chatList"
+                      prefHeight="200"
+                      style="-fx-background-color: transparent; -fx-control-inner-background: transparent;"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <TextField fx:id="messageField"
+                           promptText="Type a message..."
+                           HBox.hgrow="ALWAYS"
+                           style="-fx-background-radius: 4; -fx-background-color: #2a2a3d; -fx-text-fill: white;"/>
+                <Button fx:id="sendButton"
+                        text="Send"
+                        style="-fx-background-color: #3a3a5a; -fx-text-fill: white;"/>
+            </HBox>
+        </VBox>
+    </bottom>
+</BorderPane>

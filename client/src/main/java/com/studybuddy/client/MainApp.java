@@ -95,7 +95,8 @@ public class MainApp extends Application {
                     return;
                 }
                 case "CREATE_ROOM" -> {
-                    // forwardTo(...) for CREATE_ROOM 등도 여기서 가능
+                    forwardTo("/fxml/RoomHostView.fxml", pkt); // ✅ 여기 추가
+                    return;
                 }
                 default -> {
                     if (currentListener != null) {

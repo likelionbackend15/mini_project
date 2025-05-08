@@ -114,7 +114,6 @@ public class LogDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, roomId);
-
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(new ChatMessage(

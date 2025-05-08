@@ -17,6 +17,7 @@ dependencies {
     implementation("mysql:mysql-connector-java:8.0.33")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     implementation("org.mindrot:jbcrypt:0.4")   // bcrypt 해시 검증
+
 }
 application{
     mainClass.set("com.studybuddy.server.ServerMain")

@@ -33,7 +33,8 @@ public class MainApp extends Application {
 
         /* 1) 서버 연결 */
         clientSocket = new ClientSocket();
-        clientSocket.connect("localhost", 12345);
+        clientSocket.connect("115.138.245.92", 12345); //서버 테스팅용
+//        clientSocket.connect("localhost", 12345); //로컬 테스트용
         out = clientSocket.getWriter();
 
         /* 2) 서버 패킷 수신 → routePacket() */

@@ -9,7 +9,7 @@ build
 .idea/dbnavigator.xml
 
 # 환경 변수 파일 (민감 정보)
-.env
+server/.env
 server/src/main/resources/db.properties
 server/src/main/resources/db.properties
 client/build.gradle.kts

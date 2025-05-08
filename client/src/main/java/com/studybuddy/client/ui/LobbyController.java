@@ -51,35 +51,19 @@ public class LobbyController implements PacketListener {
 
     /** 방 목록 요청 후 RoomListController가 처리 */
     private void showRoomList() {
-        Packet pkt = new Packet(PacketType.LIST_ROOMS, "");
-        try {
-            out.println(mapper.writeValueAsString(pkt));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+//        Packet pkt = new Packet(PacketType.LIST_ROOMS, "");
+//        try {
+//            out.println(mapper.writeValueAsString(pkt));
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        } // 송치호 임시수정, 완벽하게 수정 요청 드립니다!
+
+        app.forwardTo("/fxml/RoomListView.fxml", null);
     }
 
     /** 비공개 방 입장 화면으로 전환 */
     private void joinPrivateRoom() {
         app.forwardTo("/fxml/PrivateRoomJoinView.fxml", null);
-    }
-
-    @Override
-    public void onPacket(Packet packet) {
-        try {
-            String action = new ObjectMapper().readTree(packet.payloadJson())
-                    .path("action").asText();
-
-            switch (action) {
-                case "LIST_ROOMS" -> app.forwardTo("/fxml/RoomListView.fxml", packet);
-                case "CREATE_ROOM" -> app.forwardTo("/fxml/RoomCreate.fxml", packet);
-                case "JOIN_PRIVATE" -> app.forwardTo("/fxml/PrivateRoomJoin.fxml", packet);
-                case "SETTING_USER" -> app.forwardTo("/fxml/MyInfo.fxml", packet);
-                default -> System.out.println("LobbyController: unknown action " + action);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
 

@@ -20,7 +20,7 @@ public class MyInfoController  {
     @FXML private Label emailLabel;
     @FXML private Button changePasswordButton;
     @FXML private Button logoutButton;
-    @FXML private Button deleteButton;
+    @FXML private Button deleteButton, cancelButton;
 
     private PrintWriter out;
     private MainApp app;
@@ -45,6 +45,7 @@ public class MyInfoController  {
         changePasswordButton.setOnAction(e -> handleChangePassword());
         logoutButton.setOnAction(e -> handleLogout());
         deleteButton.setOnAction(e -> handleDeleteAccount());
+        cancelButton.setOnAction(e -> goBack());
     }
 
     private void handleChangePassword() {
@@ -100,6 +101,12 @@ public class MyInfoController  {
         alert.setHeaderText(null);
         alert.setContentText(msg);
         alert.showAndWait();
+    }
+
+    private void goBack() {
+        Platform.runLater(() ->
+                app.forwardTo("/fxml/LobbyView.fxml", null)
+        );
     }
 
 

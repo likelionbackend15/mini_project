@@ -112,7 +112,11 @@ public class UserDAO {
 
             ps.setString(1, newHash);
             ps.setString(2, id);
-            ps.executeUpdate();
+
+            int result = ps.executeUpdate();
+
+            System.out.println("★ 비밀번호 업데이트 결과 = " + result); // 여기에 로그 추가
+
         }
     }
 

@@ -93,26 +93,34 @@ public class ResetPasswordController implements PacketListener {
        3) 서버 응답 처리
     ========================================================= */
     @Override
-    public void onPacket(Packet pkt) throws JsonProcessingException {
-        switch (pkt.type()) {
-            case ACK   -> handleAck(pkt);
-            case ERROR -> showError(extractError(pkt));
-            default    -> {}
+    public void onPacket(Packet pkt) {
+        try {
+            switch (pkt.type()) {
+                case ACK   -> handleAck(pkt);
+                case ERROR -> showError(extractError(pkt));
+                default    -> {}
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showError("패킷 처리 중 오류 발생: " + e.getMessage());
         }
     }
 
+
     private void handleAck(Packet pkt) throws JsonProcessingException {
-               String action = mapper.readTree(pkt.payloadJson())
-                                              .path("action").asText();
-               Platform.runLater(() -> {
-                       if ("SEND_CODE".equals(action)) {
-                               showInfo("인증 코드가 이메일로 발송되었습니다.");
-                           } else if ("RESET_OK".equals(action)) {
-                               showInfo("비밀번호가 변경되었습니다. 다시 로그인하세요.");
-                               app.forwardTo("/fxml/LoginView.fxml", null);
-                           }
-                   });
-           }
+        String action = mapper.readTree(pkt.payloadJson())
+                .path("action").asText();
+
+        if ("SEND_CODE".equals(action)) {
+            showInfo("인증 코드가 이메일로 발송되었습니다.", null);
+        } else if ("RESET_OK".equals(action)) {
+            showInfo("비밀번호가 변경되었습니다. 다시 로그인하세요.", () -> {
+                if (app != null) {
+                    app.forwardTo("/fxml/LoginView.fxml", null);
+                }
+            });
+        }
+    }
 
     @Override public void onError(Exception e) { showError(e.getMessage()); }
 
@@ -136,10 +144,15 @@ public class ResetPasswordController implements PacketListener {
         });
     }
 
-    private void showInfo(String msg) {
+    private void showInfo(String msg, Runnable afterClose) {
         Platform.runLater(() -> {
-            Alert a = new Alert(Alert.AlertType.INFORMATION, msg);
-            a.setHeaderText(null); a.setTitle("알림"); a.showAndWait();
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, msg);
+            alert.setHeaderText(null);
+            alert.setTitle("알림");
+            alert.showAndWait(); // 사용자가 확인 누를 때까지 기다림
+            if (afterClose != null) {
+                afterClose.run();
+            }
         });
     }
 }

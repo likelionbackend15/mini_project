@@ -226,21 +226,27 @@ public class ClientHandler implements Runnable {
         }
 
         String hash = BCrypt.hashpw(newPw, BCrypt.gensalt());
+
         try {
-            userDao.findByEmail(email)
-                    .ifPresent(u -> {
-                        try {
-                            userDao.updatePassword(u.getId(), hash);  // id는 String
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-            codes.remove(email);
-            sendAck("{\"action\":\"RESET_OK\"}");
+            Optional<User> userOpt = userDao.findByEmail(email);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                System.out.println("[DEBUG] 비밀번호 변경 시도 - id: " + user.getId());
+
+                userDao.updatePassword(user.getId(), hash);
+                log.debug("updatePassword 완료: id={}", user.getId());
+                codes.remove(email);
+
+                sendAck("{\"action\":\"RESET_OK\"}");
+            } else {
+                sendError("등록된 이메일이 없습니다");
+            }
         } catch (SQLException e) {
-            sendError("비밀번호 변경 실패");
+            e.printStackTrace();
+            sendError("비밀번호 변경 실패: " + e.getMessage());
         }
     }
+
     /* 계정 삭제 */
 
     private void handleDeleteAccount(Packet p) throws IOException, SQLException {

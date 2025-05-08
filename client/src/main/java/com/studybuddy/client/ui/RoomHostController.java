@@ -17,18 +17,19 @@ import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 
+import com.studybuddy.common.domain.Room;                        // ← 메타 저장용
+import com.fasterxml.jackson.databind.node.ArrayNode;            // ← Jackson ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode;           // ← Jackson ObjectNode
+
 /**
  * 방장 대기 화면 컨트롤러
  * - CREATE_ROOM, ROOM_UPDATE 패킷을 통해 참가자 목록 갱신
  * - TIMER_FOCUS_START 패킷 전송으로 포커드 시작 명령
  */
 public class RoomHostController implements PacketListener {
-    @FXML private Label roomNameLabel;
-    @FXML private Label statusLabel;
-    @FXML private Label countLabel;
+    @FXML private Label roomNameLabel, statusLabel, countLabel;
     @FXML private TableView<Member> membersTable;
-    @FXML private TableColumn<Member, String> nameCol;
-    @FXML private TableColumn<Member, String> roleCol;
+    @FXML private TableColumn<Member, String> nameCol, roleCol;
     @FXML private Button startButton;
 
     private final ObservableList<Member> members = FXCollections.observableArrayList();
@@ -37,14 +38,18 @@ public class RoomHostController implements PacketListener {
     private String roomId;
     private int maxMembers;
 
+    private Room meta;            // CREATE_ROOM 응답 때 저장해 둘 메타데이터
+
     private static final Logger log = LoggerFactory.getLogger(RoomHostController.class);
 
     @FXML
     public void initialize() {
-        nameCol.setCellValueFactory(cell -> cell.getValue().nameProperty());
-        roleCol.setCellValueFactory(cell -> cell.getValue().roleProperty());
+        // 테이블 바인딩
+        nameCol.setCellValueFactory(c -> c.getValue().nameProperty());
+        roleCol.setCellValueFactory(c -> c.getValue().roleProperty());
         membersTable.setItems(members);
 
+        // 클릭 시 서버에 START 요청
         startButton.setOnAction(e -> sendStart());
     }
 
@@ -61,18 +66,22 @@ public class RoomHostController implements PacketListener {
 
     @Override
     public void onPacket(Packet pkt) {
-        // Packet.type() 과 payloadJson() 사용
-        if (pkt.type() != PacketType.ACK) return;
         try {
+            // 1) 뽑아둘 JSON 트리
             JsonNode root = JsonUtil.mapper().readTree(pkt.payloadJson());
-            String action = root.path("action").asText();
 
-            // 방 생성 또는 참가자 업데이트
-            if ("CREATE_ROOM".equals(action) || "ROOM_UPDATE".equals(action)) {
-                Platform.runLater(() -> updateRoomInfo(root));
-
-                // 서버가 집중 세션 시작을 승인했을 때
-            } else if ("TIMER_FOCUS_START".equals(action)) {
+            // 2) 방 생성 / 업데이트 응답
+            if (pkt.type()==PacketType.ACK) {
+                String action = root.path("action").asText();
+                if ("CREATE_ROOM".equals(action) || "ROOM_UPDATE".equals(action)) {
+                    // info → meta 추출
+                    JsonNode info = root.get("info");
+                    meta = JsonUtil.mapper().treeToValue(info.get("meta"), Room.class);
+                    Platform.runLater(() -> updateRoomInfo(root));
+                }
+            }
+            // 3) 타이머 시작 브로드캐스트 오면 화면 전환
+            else if (pkt.type() == PacketType.TIMER_FOCUS_START) {
                 Platform.runLater(() ->
                         app.forwardTo("/fxml/PomodoroFocusView.fxml", pkt)
                 );
@@ -83,44 +92,99 @@ public class RoomHostController implements PacketListener {
     }
 
     private void updateRoomInfo(JsonNode root) {
-        JsonNode info = root.get("info");
-        roomId     = info.path("roomId").asText();
-        roomNameLabel.setText(info.path("name").asText());
-        maxMembers = info.path("maxMembers").asInt();
+        // 1) info → meta / curMembers 분리
+        JsonNode info = root.path("info");
+        JsonNode meta = info.path("meta");
 
-        statusLabel.setText(info.path("status").asText());
+        roomId        = meta.path("roomId").asText();
+        roomNameLabel.setText(meta.path("name").asText());
 
+        // 2) 최대인원은 meta.maxMembers
+        maxMembers = meta.path("maxMembers").asInt();
+
+        // 3) 상태 표시 (OPEN, LOCKED 등)
+        statusLabel.setText(meta.path("status").asText());
+
+        // 4) 멤버 테이블 리셋 및 방장 추가
         members.clear();
-        for (JsonNode u : root.withArray("members")) {
-            String uid   = u.path("id").asText();
-            String uname = u.path("name").asText();
-            // getCurrentUser() 로 변경
-            boolean isHost = uid.equals(UserSession.getInstance().getCurrentUser().getId());
-            members.add(new Member(uname, isHost ? "Host" : "Member"));
-        }
-        countLabel.setText("Participants: " + members.size() + "/" + maxMembers);
+        var current = UserSession.getInstance().getCurrentUser();
+        members.add(new Member(
+                current.getId(),
+                current.getUsername(),     // User 도메인에 있는 닉네임
+                "Host"
+        ));
 
-        // 방장만, 최소 1명 이상일 때 버튼 활성화
-        boolean iAmHost = UserSession.getInstance()
-                .getCurrentUser()
-                .getId()
-                .equals(info.path("hostId").asText());
-        startButton.setDisable(!(iAmHost && members.size() >= 1));
+        // 5) 서버가 보내준 members 배열(ROOM_UPDATE 시에만 있을 수 있음)
+        for (JsonNode u : root.withArray("members")) {
+            String uid = u.path("id").asText();
+            if (uid.equals(current.getId())) continue;  // 방장은 이미 넣었으므로 skip
+            String uname = u.path("name").asText();
+            // role 결정 (meta.hostId 와 비교)
+            String role = uid.equals(meta.path("hostId").asText()) ? "Host" : "Member";
+            members.add(new Member(uid,uname, role));
+        }
+
+        // 6) 참가자 수: info.curMembers / meta.maxMembers
+        int curCount = info.path("curMembers").asInt();
+        countLabel.setText("Participants: " + curCount + " / " + maxMembers);
+
+        // 7) Start 버튼: 방장이라면 언제나 활성화
+        boolean iAmHost = current.getId().equals(meta.path("hostId").asText());
+        startButton.setDisable(!iAmHost);
     }
+
+
 
     /** 집중 시작 명령 전송 */
     private void sendStart() {
         try {
-            Packet startPkt = new Packet(
+            // 1) 메타에서 포커스·브레이크 시간, 루프 수 뽑아오기
+            int focusSec = meta.getFocusMin() * 60;
+            int breakSec = meta.getBreakMin() * 60;
+            int loops    = meta.getLoops();
+
+            // 2) 멤버 리스트 JSON으로 만들기
+            ArrayNode membersArray = JsonUtil.mapper().createArrayNode();
+            for (Member m : members) {
+                membersArray.add(
+                        JsonUtil.mapper().createObjectNode()
+                                .put("id",   m.idProperty().get())
+                                .put("name", m.nameProperty().get())
+                                .put("role", m.roleProperty().get())
+                );
+            }
+
+            // 3) 초기 payload 조립
+            ObjectNode init = JsonUtil.mapper().createObjectNode();
+            init.put("roomId",       meta.getRoomId());
+            init.put("focusSec",     focusSec);
+            init.put("breakSec",     breakSec);
+            init.put("totalLoops",   loops);
+            init.put("loopIdx",      1);            // 첫 사이클
+            init.put("remainingSec", focusSec);
+            init.set("members",      membersArray);
+
+            // ───────────────────────────────────────────────────────────────
+            // 4) 화면 전환: PomodoroFocusView.fxml 로 init 데이터 전달
+            Packet initPkt = new Packet(
+                    PacketType.TIMER_FOCUS_START,
+                    init.toString()
+            );
+            app.forwardTo("/fxml/PomodoroFocusView.fxml", initPkt);
+
+            // 5) 서버에도 시작 명령 전송 (서버에서 실제 타이머 브로드캐스트를 받기 위해)
+            Packet startCmd = new Packet(
                     PacketType.TIMER_FOCUS_START,
                     String.format("{\"roomId\":\"%s\"}", roomId)
             );
-            // out 필드를 통해 전송
-            out.println(JsonUtil.mapper().writeValueAsString(startPkt));
+            out.println(JsonUtil.mapper().writeValueAsString(startCmd));
+
         } catch (Exception ex) {
-            log.error("TIMER_FOCUS_START 전송 실패", ex);
+            log.error("Start Focus 전송 실패", ex);
         }
     }
+
+
 
     @Override
     public void onError(Exception e) {
@@ -129,13 +193,28 @@ public class RoomHostController implements PacketListener {
 
     /** TableView 모델 */
     public static class Member {
+        private final javafx.beans.property.SimpleStringProperty id;    // ← 추가
         private final javafx.beans.property.SimpleStringProperty name;
         private final javafx.beans.property.SimpleStringProperty role;
-        public Member(String name, String role) {
+
+        // 기존 생성자 대신 id까지 받도록 변경
+        public Member(String id, String name, String role) {
+            this.id   = new javafx.beans.property.SimpleStringProperty(id);
             this.name = new javafx.beans.property.SimpleStringProperty(name);
             this.role = new javafx.beans.property.SimpleStringProperty(role);
         }
-        public javafx.beans.property.StringProperty nameProperty() { return name; }
-        public javafx.beans.property.StringProperty roleProperty() { return role; }
+
+        // id 접근자 추가
+        public javafx.beans.property.StringProperty idProperty() {
+            return id;
+        }
+
+        public javafx.beans.property.StringProperty nameProperty() {
+            return name;
+        }
+        public javafx.beans.property.StringProperty roleProperty() {
+            return role;
+        }
     }
+
 }

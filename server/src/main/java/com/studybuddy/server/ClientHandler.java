@@ -37,7 +37,9 @@ public class ClientHandler implements Runnable {
 
     /* ---------------- 필드 ---------------- */
     private static final Logger log = LoggerFactory.getLogger(ClientHandler.class);
+
     /** Jackson 싱글톤 Mapper 사용 (Java-Time 모듈 포함) */
+
     private static final ObjectMapper mapper = JsonUtil.mapper();
 
     private final Socket socket;
@@ -197,11 +199,11 @@ public class ClientHandler implements Runnable {
         String email = mapper.readTree(p.payloadJson()).get("email").asText();
         log.debug("STEP-1  email={}", email);   // ① 도착 확인
 
-        if (userDao.findByEmail(email).isPresent()) {
+       /* if (userDao.findByEmail(email).isPresent()) {
             log.debug("STEP-1a 중복 이메일");    // (중복이라면 여기까지만 찍힘)
             sendError("Email already used");
             return;
-        }
+        }*/
 
         String code = String.format("%06d", (int)(Math.random()*1_000_000));
         codes.put(email, new CodeInfo(code, LocalDateTime.now().plusMinutes(10)));

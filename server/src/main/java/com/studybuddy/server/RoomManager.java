@@ -38,6 +38,17 @@ public class RoomManager {
     public RoomManager(RoomDAO roomDao, LogDAO logDao) {
         this.roomDao = roomDao;
         this.logDao  = logDao;
+
+        try {
+            // DB에 존재하지만 세션에 등록되지 않은 OPEN 방들을 세션에 등록
+            for (Room r : roomDao.findOpenRooms()) {
+                if (!sessions.containsKey(r.getRoomId())) {
+                    sessions.put(r.getRoomId(), new RoomSession(r, logDao));
+                }
+            }
+        } catch (Exception e) {
+            log.warn("초기 RoomSession 로딩 실패: {}", e.getMessage());
+        }
     }
 
     /** 로비에 보여줄 OPEN 방 목록 */

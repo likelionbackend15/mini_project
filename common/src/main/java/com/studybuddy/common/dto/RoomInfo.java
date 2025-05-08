@@ -30,6 +30,8 @@
 
 package com.studybuddy.common.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.studybuddy.common.domain.Room;
 
 /**
@@ -43,10 +45,19 @@ public class RoomInfo {
     private final int loops;
     private final String status;
     private final boolean allowMidEntry;
-    private final String hostId;  // ← 추가됨
+    private final String hostId;
 
-    public RoomInfo(String roomId, String name, int curMembers, int maxMembers,
-                    int loops, String status, boolean allowMidEntry, String hostId) {
+    @JsonCreator
+    public RoomInfo(
+            @JsonProperty("roomId") String roomId,
+            @JsonProperty("name") String name,
+            @JsonProperty("curMembers") int curMembers,
+            @JsonProperty("maxMembers") int maxMembers,
+            @JsonProperty("loops") int loops,
+            @JsonProperty("status") String status,
+            @JsonProperty("allowMidEntry") boolean allowMidEntry,
+            @JsonProperty("hostId") String hostId
+    ) {
         this.roomId = roomId;
         this.name = name;
         this.curMembers = curMembers;
@@ -70,7 +81,6 @@ public class RoomInfo {
         );
     }
 
-    //----- Getters -----
     public String getRoomId()       { return roomId; }
     public String getName()         { return name; }
     public int getCurMembers()      { return curMembers; }

@@ -15,7 +15,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.studybuddy.client.ui.PomodoroFocusController"
+            fx:controller="com.studybuddy.client.ui.PomodoroController"
             prefWidth="900" prefHeight="650"
             style="-fx-background-color: #1e1e2f;">
 
@@ -50,7 +50,9 @@
                                        progress="0.0"
                                        prefWidth="200" prefHeight="200"/>
                     <VBox alignment="CENTER" spacing="8">
-                        <Label text="Focus"
+                        <!-- Phase Label: Focus or Break -->
+                        <Label fx:id="phaseLabel"
+                               text="Focus"
                                style="-fx-text-fill: white; -fx-font-size: 18px;"/>
                         <Label fx:id="timeLabel"
                                text="25:00"
@@ -58,7 +60,7 @@
                     </VBox>
                 </StackPane>
                 <Label fx:id="cycleLabel"
-                       text="Cycle 1 of 4 · 25 min focus"
+                       text="Cycle 1 of 4 · 25 min focus · 5 min break"
                        style="-fx-text-fill: white; -fx-font-size: 22px;"/>
             </VBox>
 

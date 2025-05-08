@@ -3,11 +3,17 @@ package com.studybuddy.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studybuddy.common.Packet;
 import com.studybuddy.common.PacketType;
+import com.studybuddy.common.domain.ChatMessage;
 import com.studybuddy.common.domain.Room;
 import com.studybuddy.common.domain.User;
 import com.studybuddy.common.dto.CreateRoomReq;
 import com.studybuddy.common.dto.RoomInfo;
+import com.studybuddy.common.dto.RoomInitResponse;
 import com.studybuddy.common.dto.RoomStats; // ★ 통계 DTO (있다고 가정)
+
+import com.studybuddy.common.util.JsonUtil;
+import com.studybuddy.server.dao.LogDAO;
+
 import com.studybuddy.server.dao.UserDAO;
 import com.studybuddy.server.util.MailUtil;
 import jakarta.mail.MessagingException;
@@ -33,8 +39,9 @@ public class ClientHandler implements Runnable {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private final Socket socket;
-    private final UserDAO userDao;
-    private final RoomManager roomMgr;
+   private final UserDAO userDao;
+   private final RoomManager roomMgr;
+   private final LogDAO logDao;
 
     private BufferedReader in;
     private PrintWriter    out;
@@ -50,6 +57,7 @@ public class ClientHandler implements Runnable {
         this.socket  = s;
         this.userDao = uDao;
         this.roomMgr = rMgr;
+        this.logDao  = new LogDAO();
     }
 
     /* ---------------- 메인 루프 ---------------- */
@@ -303,12 +311,33 @@ public class ClientHandler implements Runnable {
     private void handleJoinRoom(Packet p) throws IOException {
         var req = mapper.readTree(p.payloadJson());
         try {
-            curRoom = roomMgr.joinRoom(req.get("roomId").asText(), this);
-            sendAck("");
+
+                        curRoom = roomMgr.joinRoom(req.get("roomId").asText(), this);
+
+                                // ——— 과거 채팅 불러오기 ———
+                                        List<ChatMessage> history =
+                                    logDao.findMessagesByRoom(curRoom.getMeta().getRoomId());
+
+                                RoomInitResponse init = new RoomInitResponse(
+                                  curRoom.getMeta().getRoomId(),
+                                  curRoom.getMembers().size(),
+                                  curRoom.getMeta().getMaxMembers(),
+                                  curRoom.getMeta().getLoops(),
+                                  curRoom.getMeta().getStatus().name(),
+                                  curRoom.getMeta().isAllowMidEntry(),
+                                  curRoom.getMeta().getHostId(),
+                                  history
+                                        );
+                        // 클라이언트 단독 전송
+                                sendPacket(new Packet(
+                                          PacketType.ROOM_INIT,
+                                          mapper.writeValueAsString(init)
+                                                ));
         } catch (Exception e) {
             sendError("Join failed: " + e.getMessage());
         }
     }
+
 
     /** 비공개 방 입장 */
     private void handleJoinPrivate(Packet p) throws IOException {
@@ -369,7 +398,26 @@ public class ClientHandler implements Runnable {
         else                                          curRoom.startBreak();
     }
 
-    private void handleChat(Packet p) { if (curRoom != null) curRoom.broadcast(p); }
+        private void handleChat(Packet p) {
+              if (curRoom == null) return;
+              try {
+                    // 1) JSON 파싱
+                            var node   = mapper.readTree(p.payloadJson());
+                    String rid = node.get("roomId").asText();
+                    String snd = node.get("sender").asText();
+                    String txt = node.get("text").asText();
+
+                            // 2) DB에 저장
+                                    ChatMessage msg = new ChatMessage(
+                                null, rid, snd, txt, LocalDateTime.now());
+                    logDao.saveChat(msg);
+
+                            // 3) 브로드캐스트
+                                    curRoom.broadcast(p);
+                  } catch (Exception ex) {
+                    log.error("CHAT 처리 실패", ex);
+                  }
+            }
 
     /* =================================================
        5) 통계 / CSV

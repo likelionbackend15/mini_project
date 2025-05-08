@@ -3,6 +3,10 @@ package com.studybuddy.common.domain;
 /**
  * 스터디룸 메타데이터 도메인.
  */
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+
 public class Room {
     private String roomId;         // UUID
     private String name;           // 방 이름

@@ -22,6 +22,9 @@ public enum PacketType {
     MODIFY_ROOM,     // 방 설정 변경
     LOCK_ROOM,       // 방 잠금
 
+    // 방 입장 시 초기 데이터 전송
+    ROOM_INIT,
+
     // 타이머 흐름
     TIMER_FOCUS_START,  // 집중 단계 시작
     TIMER_BREAK_START,  // 휴식 단계 시작

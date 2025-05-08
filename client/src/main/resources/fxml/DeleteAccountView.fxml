@@ -3,16 +3,10 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<StackPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
-<<<<<<< HEAD
-<<<<<<< HEAD
+<StackPane xmlns="http://javafx.com/javafx/8"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.studybuddy.client.ui.DeleteAccountController"
            style="-fx-background-color: #f5f5f5;">
-=======
-           style="-fx-background-color: #f5f5f5;"  fx:controller="com.studybuddy.client.ui.DeleteAccountController">
->>>>>>> origin/main
-=======
-           style="-fx-background-color: #f5f5f5;"  fx:controller="com.studybuddy.client.ui.DeleteAccountController">
->>>>>>> origin/main
 
     <VBox alignment="CENTER"
           spacing="24"
@@ -37,15 +31,8 @@
         </VBox>
 
         <!-- 경고 문구 -->
-<<<<<<< HEAD
-<<<<<<< HEAD
-        <Label text="This action cannot be undone."
-=======
-        <Label text="This action cannot be undone." fx:id = "errorLabel"
->>>>>>> origin/main
-=======
-        <Label text="This action cannot be undone." fx:id = "errorLabel"
->>>>>>> origin/main
+        <Label fx:id="errorLabel"
+               text="This action cannot be undone."
                style="-fx-text-fill: red; -fx-font-weight: bold;" />
 
         <!-- 버튼 -->
@@ -56,12 +43,4 @@
                     style="-fx-background-color: #e53935; -fx-text-fill: white; -fx-font-weight: bold;" />
         </HBox>
     </VBox>
-<<<<<<< HEAD
-<<<<<<< HEAD
 </StackPane>
-=======
-</StackPane>
->>>>>>> origin/main
-=======
-</StackPane>
->>>>>>> origin/main

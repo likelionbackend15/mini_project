@@ -87,6 +87,7 @@ public class ClientHandler implements Runnable {
             case SEND_CODE             -> handleSendCode(p);
             case RESET_PASSWORD        -> handleResetPw(p);
             case DELETE_ACCOUNT       -> handleDeleteAccount(p);
+
             /* 로비 */
             case LIST_ROOMS          -> handleListRooms();
             case CREATE_ROOM         -> handleCreateRoom(p);

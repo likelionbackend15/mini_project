@@ -33,8 +33,9 @@ public class MainApp extends Application {
 
         /* 1) 서버 연결 */
         clientSocket = new ClientSocket();
-        clientSocket.connect("115.138.245.92", 12345); //서버 테스팅용
+        clientSocket.connect("115.138.245.92", 12345);// 서버 테스팅용
 //        clientSocket.connect("localhost", 12345); //로컬 테스트용
+//        clientSocket.connect("192.168.123.101", 12345); //송치호 테스팅용
         out = clientSocket.getWriter();
 
         /* 2) 서버 패킷 수신 → routePacket() */
@@ -84,18 +85,29 @@ public class MainApp extends Application {
     /** ACK 본문(action)에 따라 화면 이동 */
     private void handleAck(Packet pkt) {
         try {
-            // 1) action 파싱
             String action = mapper.readTree(pkt.payloadJson())
                     .path("action").asText();
 
-            // 2) 모든 ACK을 현재 리스너(=화면 컨트롤러)에 위임
-            if (currentListener != null) {
-                currentListener.onPacket(pkt);
+            // ✅ 여기서 화면 전환 처리 추가
+            switch (action) {
+                case "JOIN_ROOM", "JOIN_PRIVATE" -> {
+                    forwardTo("/fxml/PomodoroView.fxml", pkt);
+                    return;
+                }
+                case "CREATE_ROOM" -> {
+                    // forwardTo(...) for CREATE_ROOM 등도 여기서 가능
+                }
+                default -> {
+                    if (currentListener != null) {
+                        currentListener.onPacket(pkt);
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 
     /** FXML → 컨트롤러 초기화 → Scene 전환 */
     public void forwardTo(String fxml, Packet firstPkt) {
@@ -112,13 +124,11 @@ public class MainApp extends Application {
 
             // --- 리플렉션 기반 자동 주입 시작 ---
             for (var m : ctrl.getClass().getMethods()) {
-                // setWriter(PrintWriter)
                 if (m.getName().equals("setWriter")
                         && m.getParameterCount() == 1
                         && m.getParameterTypes()[0] == PrintWriter.class) {
                     m.invoke(ctrl, out);
                 }
-                // setApp(MainApp)
                 if (m.getName().equals("setApp")
                         && m.getParameterCount() == 1
                         && m.getParameterTypes()[0] == MainApp.class) {
@@ -127,32 +137,29 @@ public class MainApp extends Application {
             }
             // --- 자동 주입 끝 ---
 
-            // Listener로 등록
+            // ✅ PacketListener 등록을 먼저!
             if (ctrl instanceof PacketListener pl) {
                 addScreenListener(pl);
             }
 
-            // 첫 패킷 전달: 컨트롤러에 setInitData(Packet) 메서드가 있으면 호출
+            // ✅ 그 다음에 패킷 전달
             if (firstPkt != null) {
                 try {
-                    // 1) setInitData(Packet) 우선 시도
                     ctrl.getClass()
                             .getMethod("setInitData", Packet.class)
                             .invoke(ctrl, firstPkt);
                 } catch (NoSuchMethodException ignored) {
-                    // 2) 없으면 기존처럼 onPacket(Packet) 호출
                     try {
                         ctrl.getClass()
                                 .getMethod("onPacket", Packet.class)
                                 .invoke(ctrl, firstPkt);
-                                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                                    }
                     } catch (Exception ex) {
-                    ex.printStackTrace();
+                        ex.printStackTrace();
                     }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
-
+            }
 
             primaryStage.setScene(scene);
             primaryStage.show();
@@ -161,6 +168,7 @@ public class MainApp extends Application {
             e.printStackTrace();
         }
     }
+
 
 
     /* 알림 */

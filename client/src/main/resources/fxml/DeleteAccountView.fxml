@@ -4,7 +4,11 @@
 <?import javafx.scene.layout.*?>
 
 <StackPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+<<<<<<< HEAD
            style="-fx-background-color: #f5f5f5;">
+=======
+           style="-fx-background-color: #f5f5f5;"  fx:controller="com.studybuddy.client.ui.DeleteAccountController">
+>>>>>>> origin/main
 
     <VBox alignment="CENTER"
           spacing="24"
@@ -29,7 +33,11 @@
         </VBox>
 
         <!-- 경고 문구 -->
+<<<<<<< HEAD
         <Label text="This action cannot be undone."
+=======
+        <Label text="This action cannot be undone." fx:id = "errorLabel"
+>>>>>>> origin/main
                style="-fx-text-fill: red; -fx-font-weight: bold;" />
 
         <!-- 버튼 -->
@@ -40,4 +48,8 @@
                     style="-fx-background-color: #e53935; -fx-text-fill: white; -fx-font-weight: bold;" />
         </HBox>
     </VBox>
+<<<<<<< HEAD
 </StackPane>
+=======
+</StackPane>
+>>>>>>> origin/main

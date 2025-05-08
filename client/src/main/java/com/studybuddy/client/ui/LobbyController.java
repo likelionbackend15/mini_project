@@ -3,7 +3,6 @@ package com.studybuddy.client.ui;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studybuddy.client.MainApp;
 import com.studybuddy.client.model.UserSession;
-import com.studybuddy.client.net.PacketListener;
 import com.studybuddy.common.Packet;
 import com.studybuddy.common.PacketType;
 import javafx.fxml.FXML;
@@ -12,7 +11,7 @@ import javafx.scene.text.Text;
 
 import java.io.PrintWriter;
 
-public class LobbyController implements PacketListener {
+public class LobbyController {
     @FXML private Text welcomeText;
     @FXML private Button createRoomButton;
     @FXML private Button listRoomsButton;
@@ -66,7 +65,6 @@ public class LobbyController implements PacketListener {
         app.forwardTo("/fxml/PrivateRoomJoinView.fxml", null);
     }
 
-
     /** 내 정보(통계) 조회 요청 후 StatsController가 처리 */
     private void requestStats() {
         Packet pkt = new Packet(PacketType.STATS_VIEW, "");
@@ -76,10 +74,4 @@ public class LobbyController implements PacketListener {
             ex.printStackTrace();
         }
     }
-
-    @Override
-    public void onError(Exception ex) {
-        System.err.println("LobbyController error: " + ex.getMessage());
-    }
-
 }

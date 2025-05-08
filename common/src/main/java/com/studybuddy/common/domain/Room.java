@@ -15,6 +15,8 @@ public class Room {
     private String password;       //프라이빗 방 비밀번호 (nullable)
     private RoomStatus status;     // OPEN, LOCKED, RUNNING, CLOSED
 
+    // Jackson용 빈 생성자 (추가)
+    public Room() { }
 
     public Room(String roomId, String name, int maxMembers, boolean allowMidEntry, int focusMin, int breakMin, int loops, String  hostId,String password, RoomStatus status) {
         this.roomId = roomId;

@@ -101,14 +101,15 @@ public class RoomCreateController implements PacketListener {
             if (pkt.type() == PacketType.ACK) {
                 try {
                     // 1) wrapper 전체 JSON 파싱
-                    JsonNode root = JsonUtil.mapper().readTree(pkt.payloadJson());
-                    String action = root.path("action").asText();
+                    JsonNode root  = JsonUtil.mapper().readTree(pkt.payloadJson());
+                    String  action = root.path("action").asText();
 
                     // 2) CREATE_ROOM 액션만 처리 → RoomHostView로 이동
                     if ("CREATE_ROOM".equals(action)) {
+
+                        // 원본 pkt 그대로 넘기기
                         app.forwardTo("/fxml/RoomHostView.fxml", pkt);
                     }
-
 
                 } catch (Exception ex) {
                     errorText.setText("응답 처리 오류: " + ex.getMessage());
@@ -125,6 +126,7 @@ public class RoomCreateController implements PacketListener {
             }
         });
     }
+
 
 
 

@@ -1,6 +1,7 @@
 package com.studybuddy.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.studybuddy.common.Packet;
 import com.studybuddy.common.PacketType;
 import com.studybuddy.common.domain.ChatMessage;
@@ -36,6 +37,9 @@ public class ClientHandler implements Runnable {
 
     /* ---------------- 필드 ---------------- */
     private static final Logger log = LoggerFactory.getLogger(ClientHandler.class);
+
+    /** Jackson 싱글톤 Mapper 사용 (Java-Time 모듈 포함) */
+
     private static final ObjectMapper mapper = JsonUtil.mapper();
 
     private final Socket socket;
@@ -293,15 +297,33 @@ public class ClientHandler implements Runnable {
     }
 
     /** 방 생성 */
+    /** 방 생성 */
     private void handleCreateRoom(Packet p) throws IOException {
-        if (user == null) { sendError("Login first"); return; }
+        if (user == null) {
+            sendError("Login first");
+            return;
+        }
         CreateRoomReq dto = mapper.readValue(p.payloadJson(), CreateRoomReq.class);
 
         try {
+            // 1) 룸 만들고 방장 추가
             curRoom = roomMgr.createRoom(dto, user);
-            curRoom.addMember(this);    // 방장 본인
-            RoomInfo info = new RoomInfo(curRoom.getMeta(), curRoom.getMembers().size());
-            sendAck(mapper.writeValueAsString(info));
+            curRoom.addMember(this);
+
+            // 2) 실제 전송할 RoomInfo DTO 생성
+            RoomInfo infoDto = new RoomInfo(
+                    curRoom.getMeta(),
+                    curRoom.getMembers().size()
+            );
+
+            // 3) action + info 래퍼 오브젝트 만들기
+            ObjectNode wrapper = JsonUtil.mapper().createObjectNode();
+            wrapper.put("action", "CREATE_ROOM");
+            wrapper.set("info", JsonUtil.mapper().valueToTree(infoDto));
+
+            // 4) 래핑된 JSON 으로 ACK 전송
+            sendAck(wrapper.toString());
+
         } catch (Exception e) {
             sendError("Create room failed: " + e.getMessage());
         }
@@ -468,7 +490,9 @@ public class ClientHandler implements Runnable {
     }
 
     private void send(PacketType t, String body) {
-        try { out.println(mapper.writeValueAsString(new Packet(t, body))); }
+        try { out.println(mapper.writeValueAsString(new Packet(t, body)));
+            out.flush();}
+
         catch (Exception e) { log.error("send 실패", e); }
     }
 

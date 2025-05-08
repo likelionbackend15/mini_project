@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10" alignment="CENTER" xmlns:fx="http://javafx.com/fxml" fx:controller="com.studybuddy.client.ui.PrivateRoomJoinPopupController" style="-fx-padding: 20;">
+    <Label text="비밀번호를 입력하세요" />
+    <PasswordField fx:id="passwordField" promptText="Password" />
+    <Label fx:id="errorLabel" textFill="red" visible="false" />
+    <HBox spacing="10" alignment="CENTER">
+        <Button text="입장" onAction="#handleJoin" />
+        <Button text="취소" onAction="#handleCancel" />
+    </HBox>
+</VBox>

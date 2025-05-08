@@ -55,20 +55,31 @@ public class DeleteAccountController implements PacketListener{
     }
 
     private void deleteAccount() {
+        String password = passwordField.getText();
 
-            try {
-                String payload = String.format(
-                        "{\"id\":\"%s\",\"password\":\"%s\"}",
-                        UserSession.getInstance().getCurrentUser().getId(),passwordField.getText());
+        if (password == null || password.isEmpty()) {
+            showError("비밀번호를 입력해주세요.");
+            return;
+        }
 
-                String json = JsonUtil.mapper().writeValueAsString(new Packet(PacketType.DELETE_ACCOUNT, payload));
-                out.println(json);
-            } catch (Exception ex) {
-                showError("계정 삭제 오류 : " + ex.getMessage());
-            }
+        try {
+            String id = UserSession.getInstance().getCurrentUser().getId();
+            String payload = String.format("{\"id\":\"%s\", \"password\":\"%s\"}", id, password);
 
+            // 삭제 요청 패킷 생성
+            Packet packet = new Packet(PacketType.DELETE_ACCOUNT, payload);
 
+            // 디버깅 로그
+            System.out.println("전송 패킷: " + mapper.writeValueAsString(packet));
+
+            // 서버에 전송
+            out.println(mapper.writeValueAsString(packet));
+
+        } catch (Exception e) {
+            showError("삭제 요청 중 오류 발생: " + e.getMessage());
+        }
     }
+
 
 
     @Override
@@ -80,16 +91,14 @@ public class DeleteAccountController implements PacketListener{
             String action = root.path("action").asText();
 
             if ("DELETE_ACCOUNT".equals(action)) {
-
-                // 로그아웃
+                // 1. 세션 제거
                 UserSession.getInstance().clear();
-                // 2) 화면 전환: LobbyVIew
-                Platform.runLater(() ->
-                        app.forwardTo("/fxml/LoginView.fxml", null)
-                );
+
+                // 2. 로그인 화면으로 이동 (예시)
+                Platform.runLater(() -> app.forwardTo("/fxml/LoginView.fxml", null));
             }
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            showError("서버 응답 처리 중 오류 발생: " + e.getMessage());
         }
     }
 

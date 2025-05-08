@@ -1,7 +1,6 @@
 package com.studybuddy.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.studybuddy.common.Packet;
 import com.studybuddy.common.PacketType;
 import com.studybuddy.common.domain.ChatMessage;
@@ -11,8 +10,10 @@ import com.studybuddy.common.dto.CreateRoomReq;
 import com.studybuddy.common.dto.RoomInfo;
 import com.studybuddy.common.dto.RoomInitResponse;
 import com.studybuddy.common.dto.RoomStats; // ★ 통계 DTO (있다고 가정)
+
 import com.studybuddy.common.util.JsonUtil;
 import com.studybuddy.server.dao.LogDAO;
+
 import com.studybuddy.server.dao.UserDAO;
 import com.studybuddy.server.util.MailUtil;
 import jakarta.mail.MessagingException;
@@ -35,7 +36,7 @@ public class ClientHandler implements Runnable {
 
     /* ---------------- 필드 ---------------- */
     private static final Logger log = LoggerFactory.getLogger(ClientHandler.class);
-    private static final ObjectMapper mapper = JsonUtil.mapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private final Socket socket;
    private final UserDAO userDao;
@@ -94,6 +95,7 @@ public class ClientHandler implements Runnable {
             case SEND_CODE             -> handleSendCode(p);
             case RESET_PASSWORD        -> handleResetPw(p);
             case DELETE_ACCOUNT       -> handleDeleteAccount(p);
+
             /* 로비 */
             case LIST_ROOMS          -> handleListRooms();
             case CREATE_ROOM         -> handleCreateRoom(p);
@@ -232,21 +234,27 @@ public class ClientHandler implements Runnable {
         }
 
         String hash = BCrypt.hashpw(newPw, BCrypt.gensalt());
+
         try {
-            userDao.findByEmail(email)
-                    .ifPresent(u -> {
-                        try {
-                            userDao.updatePassword(u.getId(), hash);  // id는 String
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-            codes.remove(email);
-            sendAck("{\"action\":\"RESET_OK\"}");
+            Optional<User> userOpt = userDao.findByEmail(email);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                System.out.println("[DEBUG] 비밀번호 변경 시도 - id: " + user.getId());
+
+                userDao.updatePassword(user.getId(), hash);
+                log.debug("updatePassword 완료: id={}", user.getId());
+                codes.remove(email);
+
+                sendAck("{\"action\":\"RESET_OK\"}");
+            } else {
+                sendError("등록된 이메일이 없습니다");
+            }
         } catch (SQLException e) {
-            sendError("비밀번호 변경 실패");
+            e.printStackTrace();
+            sendError("비밀번호 변경 실패: " + e.getMessage());
         }
     }
+
     /* 계정 삭제 */
 
     private void handleDeleteAccount(Packet p) throws IOException, SQLException {
@@ -292,17 +300,8 @@ public class ClientHandler implements Runnable {
         try {
             curRoom = roomMgr.createRoom(dto, user);
             curRoom.addMember(this);    // 방장 본인
-
-            // ① 실제 RoomInfo DTO
             RoomInfo info = new RoomInfo(curRoom.getMeta(), curRoom.getMembers().size());
-
-            // ② action + info 래퍼 JSON 만들기
-            ObjectNode wrapper = mapper.createObjectNode();
-            wrapper.put("action", "CREATE_ROOM");
-            wrapper.set("info", mapper.valueToTree(info));
-
-            // ③ 래퍼로 ACK 전송
-            sendAck(mapper.writeValueAsString(wrapper));
+            sendAck(mapper.writeValueAsString(info));
         } catch (Exception e) {
             sendError("Create room failed: " + e.getMessage());
         }

@@ -18,10 +18,6 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     implementation("org.mindrot:jbcrypt:0.4")   // bcrypt 해시 검증
 
-
-    //
-
-    implementation ("io.github.cdimascio:java-dotenv:5.2.2")
 }
 application{
     mainClass.set("com.studybuddy.server.ServerMain")

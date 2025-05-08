@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ServerMain" type="Application" factoryName="Application">
+    <option name="ALTERNATIVE_JRE_PATH" value="/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <envs>
+      <env name="SMTP_HOST" value="smtp.naver.com" />
+      <env name="SNTP_PASS" value="HXQCUMWEUKNZ" />
+      <env name="SMTP_USER" value="youngju817@naver.com" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="com.studybuddy.server.ServerMain" />
+    <module name="mini_project.server.main" />
+    <option name="VM_PARAMETERS" value="--module-path $USER_HOME$/Downloads/javafx-sdk-21.0.6/lib" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

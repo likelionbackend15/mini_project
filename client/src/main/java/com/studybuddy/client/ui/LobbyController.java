@@ -50,12 +50,14 @@ public class LobbyController {
 
     /** 방 목록 요청 후 RoomListController가 처리 */
     private void showRoomList() {
-        Packet pkt = new Packet(PacketType.LIST_ROOMS, "");
-        try {
-            out.println(mapper.writeValueAsString(pkt));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+//        Packet pkt = new Packet(PacketType.LIST_ROOMS, "");
+//        try {
+//            out.println(mapper.writeValueAsString(pkt));
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        } // 송치호 임시수정, 완벽하게 수정 요청 드립니다!
+
+        app.forwardTo("/fxml/RoomListView.fxml", null);
     }
 
     /** 비공개 방 입장 화면으로 전환 */

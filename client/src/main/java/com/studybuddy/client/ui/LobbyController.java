@@ -3,6 +3,7 @@ package com.studybuddy.client.ui;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studybuddy.client.MainApp;
 import com.studybuddy.client.model.UserSession;
+import com.studybuddy.client.net.PacketListener;
 import com.studybuddy.common.Packet;
 import com.studybuddy.common.PacketType;
 import javafx.fxml.FXML;
@@ -11,7 +12,7 @@ import javafx.scene.text.Text;
 
 import java.io.PrintWriter;
 
-public class LobbyController {
+public class LobbyController implements PacketListener {
     @FXML private Text welcomeText;
     @FXML private Button createRoomButton;
     @FXML private Button listRoomsButton;
@@ -63,6 +64,25 @@ public class LobbyController {
         app.forwardTo("/fxml/PrivateRoomJoinView.fxml", null);
     }
 
+    @Override
+    public void onPacket(Packet packet) {
+        try {
+            String action = new ObjectMapper().readTree(packet.payloadJson())
+                    .path("action").asText();
+
+            switch (action) {
+                case "LIST_ROOMS" -> app.forwardTo("/fxml/RoomListView.fxml", packet);
+                case "CREATE_ROOM" -> app.forwardTo("/fxml/RoomCreate.fxml", packet);
+                case "JOIN_PRIVATE" -> app.forwardTo("/fxml/PrivateRoomJoin.fxml", packet);
+                case "SETTING_USER" -> app.forwardTo("/fxml/MyInfo.fxml", packet);
+                default -> System.out.println("LobbyController: unknown action " + action);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
     /** 내 정보(통계) 조회 요청 후 StatsController가 처리 */
     private void requestStats() {
         Packet pkt = new Packet(PacketType.STATS_VIEW, "");
@@ -72,4 +92,10 @@ public class LobbyController {
             ex.printStackTrace();
         }
     }
+
+    @Override
+    public void onError(Exception ex) {
+        System.err.println("LobbyController error: " + ex.getMessage());
+    }
+
 }

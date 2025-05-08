@@ -87,30 +87,17 @@ public class MainApp extends Application {
     /** ACK 본문(action)에 따라 화면 이동 */
     private void handleAck(Packet pkt) {
         try {
+            // 1) action 파싱
             String action = mapper.readTree(pkt.payloadJson())
-                    .get("action").asText();
+                    .path("action").asText();
 
-            switch (action) {
-                case "LOGIN"      -> forwardTo("/fxml/LobbyView.fxml", pkt);
-                case "SIGNUP"     -> {            // 회원가입 완료
-                    showAlert("회원가입 성공", "로그인 후 이용하세요");
-                    forwardTo("/fxml/LoginView.fxml", pkt);
-                }
-                case "LIST_ROOMS" -> forwardTo("/fxml/RoomListView.fxml", pkt);
-                case "CREATE_ROOM"
-                        -> forwardTo("/fxml/RoomCreateView.fxml", pkt);
-                case "JOIN_PRIVATE" -> forwardTo("/fxml/PrivateRoomJoinView.fxml", pkt);
-                case "BACK_TO_LOBBY"
-                        -> forwardTo("/fxml/LobbyView.fxml", pkt);
-                case "ROOM_STATS", "DOWNLOAD_CSV"
-                        -> forwardTo("/fxml/StatsView.fxml", pkt);
-                default -> {
-                    // 여기로 오면 화면 전환이 필요 없는 ACK.
-                    if (currentListener != null)   // ★ 추가
-                        currentListener.onPacket(pkt);
-                }
+            // 2) 모든 ACK을 현재 리스너(=화면 컨트롤러)에 위임
+            if (currentListener != null) {
+                currentListener.onPacket(pkt);
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /** FXML → 컨트롤러 초기화 → Scene 전환 */

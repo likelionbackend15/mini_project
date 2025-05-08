@@ -30,3 +30,5 @@ public class RoomInfo {
     public String getStatus() { return status; }
     public boolean isAllowMidEntry() { return allowMidEntry; }
 }
+
+//의존성이 중복됩니다! 해당 클래스 삭제 요망

@@ -9,6 +9,7 @@ public enum PacketType {
     SIGNUP,      // 회원가입 요청/응답
     SEND_CODE,         // 이메일 인증 코드 전송
     RESET_PASSWORD,    // 비밀번호 재설정 요청
+    DELETE_ACCOUNT,     // 계정 삭제 요청/응답
 
     // 로비
     LIST_ROOMS,      // 방 목록 조회

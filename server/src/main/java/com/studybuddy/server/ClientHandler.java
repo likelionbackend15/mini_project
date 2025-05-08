@@ -88,7 +88,7 @@ public class ClientHandler implements Runnable {
             case LOGIN               -> handleLogin(p);
             case SEND_CODE             -> handleSendCode(p);
             case RESET_PASSWORD        -> handleResetPw(p);
-
+            case DELETE_ACCOUNT       -> handleDeleteAccount(p);
             /* 로비 */
             case LIST_ROOMS          -> handleListRooms();
             case CREATE_ROOM         -> handleCreateRoom(p);
@@ -242,7 +242,28 @@ public class ClientHandler implements Runnable {
             sendError("비밀번호 변경 실패");
         }
     }
+    /* 계정 삭제 */
 
+    private void handleDeleteAccount(Packet p) throws IOException, SQLException {
+        // JSON 문자열 → Tree
+        var req = mapper.readTree(p.payloadJson());
+
+        // payload 에 담긴 id 꺼내기
+        String id = req.get("id").asText();
+        String password = req.get("password").asText();
+        // 사용자 존재 여부 확인
+        Optional<User> opt = userDao.findById(id);
+        if (opt.isPresent() && BCrypt.checkpw(password, opt.get().getHashedPw())) {
+            boolean deleted = userDao.deleteAccount(id);
+            if (deleted) {
+                sendAck("{\"action\":\"DELETE_ACCOUNT\"}");
+            } else {
+                sendError("계정 삭제에 실패했습니다.");
+            }
+        } else {
+            sendError("계정과 비밀번호를 다시 확인해주세요.");
+        }
+    }
 
     /* =================================================
        2) 로비 / 방

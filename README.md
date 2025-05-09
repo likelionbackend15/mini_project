@@ -73,6 +73,7 @@ java \
 
 
 **회원탈퇴화면 기능**
+
 ![스크린샷 2025-05-09 17 35 55](https://github.com/user-attachments/assets/03c4a191-7e34-4483-ae81-c3c32f842c62)
 
 - 셋팅화면에서 Delete Account 버튼 클릭 시 위 확인창 알림
@@ -85,6 +86,7 @@ java \
 
 
 **로그아웃 기능**
+
 ![스크린샷 2025-05-09 17 39 16](https://github.com/user-attachments/assets/8537d16f-6c3d-4a79-a38b-a036fd4a75de)
 
 - 셋팅화면에서 LogOut 클릭 시 위 알림창이 뜸

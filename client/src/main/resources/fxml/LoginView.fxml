@@ -42,7 +42,7 @@
 
         <!-- 체크박스 + 비밀번호 찾기 -->
         <HBox alignment="CENTER_LEFT" prefWidth="320">
-            <CheckBox fx:id="rememberMeCheckBox" text="Remember me"/>
+
             <Pane HBox.hgrow="ALWAYS"/>
             <Hyperlink fx:id="forgotPasswordLink" text="Forgot password?"/>
         </HBox>

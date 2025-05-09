@@ -1,12 +1,12 @@
 # mini_project
 미니 프로젝트 1차 (회고 1팀)
 
-<환경조건>
+**<환경조건>**
 
 자바 21 이상
 javafx sdk 21.0.6 이상
 
-<프로그램 실행 방법>
+**<프로그램 실행 방법>**
 
 터미널 창에 jar 파일이 위치한 곳에 터미널을 열고
   <img width="776" alt="스크린샷 2025-05-09 오후 4 51 28" src="https://github.com/user-attachments/assets/ad7e78a9-9d46-4ce8-bc41-b7c4ae3bff30" />
@@ -16,23 +16,23 @@ javafx sdk 21.0.6 이상
 
    <img width="565" alt="image" src="https://github.com/user-attachments/assets/6b25ff99-991a-4d7f-96bc-37a8b36a4b7c" />
 
-예시)
+**예시)**
 
 java \
 —module-path "/Library/Java/Myli/javafx-sdk-21.0.6/lib" \
 —add-modules javafx.controls,javafx.fxml,javafx.media \
 -jar client-all.jar
 
-<핵심 기능 및 사용 설명서>
+**<핵심 기능 및 사용 설명서>**
 
-로그인 기능
+**로그인 기능**
 
 <img width="411" alt="image" src="https://github.com/user-attachments/assets/27d7266e-f255-450b-a8bb-3f2b2047703d" />
 
 - 기존 계정으로 바로 서비스에 입장
 - 아이디·비밀번호를 입력하면 서버가 DB의 Bcrypt 해시와 대조해 즉시 인증을 끝냄
 
-회원가입 기능
+**회원가입 기능**
 
 <img width="432" alt="image" src="https://github.com/user-attachments/assets/3d511860-de81-40f1-8e43-c93572e62446" />
 

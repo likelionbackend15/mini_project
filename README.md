@@ -49,7 +49,8 @@ java \
 - 입력한 이메일로 인증 코드 확인
 - 이 인증코드를 회원가입 창에 입력
 
-  
+**로비화면 기능**
+![image.png](attachment:0ec65346-4f7f-4095-9cf3-0f92de4e70fc:image.png)
 
 
 

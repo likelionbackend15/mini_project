@@ -50,7 +50,21 @@ java \
 - 이 인증코드를 회원가입 창에 입력
 
 **로비화면 기능**
-![image.png](attachment:0ec65346-4f7f-4095-9cf3-0f92de4e70fc:image.png)
+<img width="650" alt="image" src="https://github.com/user-attachments/assets/f9b49ac4-2d8a-466d-8794-d19875764f9b" />
+
+- RoomList, Create Study Room, MyInfo 중 원하는 버튼 클릭 시 해당 기능 화면으로 즉시 전환
+- 네비게이션만 담당해 로비에서는 별도의 서버 요청 없이 Scene 전환만 수행
+
+**셋팅화면 기능**
+<img width="650" alt="image" src="https://github.com/user-attachments/assets/f9b49ac4-2d8a-466d-8794-d19875764f9b" />
+
+- 상단에 자신의 ID, Email이 표시
+- change Password, LogOut, Delete Account, Back 중 원하는 버튼 클릭 시 해당 기능 화면으로 즉시 전환
+- LogOut 버튼 클릭 시 세션, 토큰을 모두 삭제하고 로그인 화면으로 전환
+- Back 버튼 클릭 시 로비화면으로 전환
+
+**비밀번호 변경화면 기능**
+![스크린샷 2025-05-09 17 32 24](https://github.com/user-attachments/assets/329e4a6a-d06d-48f4-bab9-48079922494a)
 
 
 

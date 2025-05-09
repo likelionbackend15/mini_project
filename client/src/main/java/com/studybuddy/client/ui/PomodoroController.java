@@ -179,11 +179,13 @@ public class PomodoroController implements PacketListener {
         double progress = remainingSec / (double)
                 (timerModel.getPhase().equals("FOCUS") ? totalFocusSec : totalBreakSec);
         progressIndicator.setProgress(progress);
-        cycleLabel.setText(String.format(
-                "Cycle %d of %d · %d min focus · %d min break",
-                currentLoop, totalLoops,
-                totalFocusSec/60, totalBreakSec/60
-        ));
+//        cycleLabel.setText(String.format(
+//                "Cycle %d of %d · %d min focus · %d min break",
+//                currentLoop, totalLoops,
+//                totalFocusSec/60, totalBreakSec/60
+//        ));
+
+
     }
 
     private void sendChat() {

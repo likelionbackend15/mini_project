@@ -41,7 +41,7 @@ public class LobbyController {
         createRoomButton.setOnAction(e -> showCreateRoom());
         listRoomsButton.setOnAction(e -> showRoomList());
 
-        joinPrivateRoomButton.setOnAction(e -> joinPrivateRoom());
+//        joinPrivateRoomButton.setOnAction(e -> joinPrivateRoom());
         myInfoButton.setOnAction(e -> showMyInfo());
     }
 
@@ -62,10 +62,10 @@ public class LobbyController {
         app.forwardTo("/fxml/RoomListView.fxml", null);
     }
 
-    /** 비공개 방 입장 화면으로 전환 */
-    private void joinPrivateRoom() {
-        app.forwardTo("/fxml/PrivateRoomJoinView.fxml", null);
-    }
+//    /** 비공개 방 입장 화면으로 전환 */
+//    private void joinPrivateRoom() {
+//        app.forwardTo("/fxml/PrivateRoomJoinView.fxml", null);
+//    }
 
 
 

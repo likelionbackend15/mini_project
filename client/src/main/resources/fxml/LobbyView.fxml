@@ -33,10 +33,10 @@
                 prefWidth="320" prefHeight="46"
                 style="-fx-background-color: #0d6efd; -fx-text-fill: white; -fx-font-size: 18; -fx-background-radius: 6;"/>
 
-        <Button fx:id="joinPrivateRoomButton"
-                text="Join Private Room"
-                prefWidth="320" prefHeight="46"
-                style="-fx-background-color: #0d6efd; -fx-text-fill: white; -fx-font-size: 18; -fx-background-radius: 6;"/>
+<!--        <Button fx:id="joinPrivateRoomButton"-->
+<!--                text="Join Private Room"-->
+<!--                prefWidth="320" prefHeight="46"-->
+<!--                style="-fx-background-color: #0d6efd; -fx-text-fill: white; -fx-font-size: 18; -fx-background-radius: 6;"/>-->
 
         <Button fx:id="myInfoButton"
                 text="My Info"

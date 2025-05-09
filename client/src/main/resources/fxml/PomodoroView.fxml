@@ -60,8 +60,10 @@
                     </VBox>
                 </StackPane>
                 <Label fx:id="cycleLabel"
-                       text="Cycle 1 of 4 · 25 min focus · 5 min break"
-                       style="-fx-text-fill: white; -fx-font-size: 22px;"/>
+                       text="Success is best when it’s shared. – Howard Schultz"
+                       style="-fx-font-family: 'Arial'; -fx-font-size: 22px; -fx-font-weight: bold; -fx-font-style: italic; -fx-text-fill: white;" />
+
+
             </VBox>
 
             <!-- 참가자 목록 영역 -->

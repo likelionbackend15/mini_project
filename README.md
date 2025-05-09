@@ -50,13 +50,13 @@ java \
 - 이 인증코드를 회원가입 창에 입력
 
 **로비화면 기능**
-<img width="650" alt="image" src="https://github.com/user-attachments/assets/f9b49ac4-2d8a-466d-8794-d19875764f9b" />
+![스크린샷 2025-05-09 17 29 40](https://github.com/user-attachments/assets/76d89bcb-47ca-4ac3-9db8-e51992534d59)
 
 - RoomList, Create Study Room, MyInfo 중 원하는 버튼 클릭 시 해당 기능 화면으로 즉시 전환
 - 네비게이션만 담당해 로비에서는 별도의 서버 요청 없이 Scene 전환만 수행
 
 **셋팅화면 기능**
-<img width="650" alt="image" src="https://github.com/user-attachments/assets/f9b49ac4-2d8a-466d-8794-d19875764f9b" />
+![스크린샷 2025-05-09 17 30 37](https://github.com/user-attachments/assets/ee803390-cd12-4175-aa5b-ccbff9ece9d3)
 
 - 상단에 자신의 ID, Email이 표시
 - change Password, LogOut, Delete Account, Back 중 원하는 버튼 클릭 시 해당 기능 화면으로 즉시 전환
@@ -66,6 +66,26 @@ java \
 **비밀번호 변경화면 기능**
 ![스크린샷 2025-05-09 17 32 24](https://github.com/user-attachments/assets/329e4a6a-d06d-48f4-bab9-48079922494a)
 
+- 이메일 입력 시 해당 이메일로 인증코드 발송
+- 사용자가 인증 코드 입력 후 새 비밀번호 두 번 입력
+- Change Password 클릭 시 비밀번호 변경 완료
+- Back to the Lobby 클릭 시 로비화면으로 전환
 
+**회원탈퇴화면 기능**
+![스크린샷 2025-05-09 17 35 55](https://github.com/user-attachments/assets/03c4a191-7e34-4483-ae81-c3c32f842c62)
 
+- 셋팅화면에서 Delete Account 버튼 클릭 시 위 확인창 알림
+
+![스크린샷 2025-05-09 17 37 21](https://github.com/user-attachments/assets/09df7ade-984b-430a-b4bc-692a0e312881)
+
+- 확인 클릭 시 Delete Account 화면으로 전환
+- 자신의 패스워드 입력 후 Delete Account 클릭 시 계정 삭제
+- Cancel 클릭 시 로비화면으로 전환
+
+**로그아웃 기능**
+![스크린샷 2025-05-09 17 39 16](https://github.com/user-attachments/assets/8537d16f-6c3d-4a79-a38b-a036fd4a75de)
+
+- 셋팅화면에서 LogOut 클릭 시 위 알림창이 뜸
+- 확인 클릭 시 로그아웃 상태로 로그인화면으로 전환
+- 취소 클릭 시 현재 화면으로 전환
    

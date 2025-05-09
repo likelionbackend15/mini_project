@@ -82,27 +82,51 @@ public class PomodoroController implements PacketListener {
     @Override
     public void onPacket(Packet pkt) {
         try {
+            log.debug("[🍅 Pomodoro] onPacket type={} payload={}", pkt.type(), pkt.payloadJson());
             JsonNode root = JsonUtil.mapper().readTree(pkt.payloadJson());
             switch (pkt.type()) {
                 case ROOM_INIT -> Platform.runLater(() -> {
+                    // 1) 페이로드 JSON 전체를 로그에 출력
+                    log.debug("∘∘∘ ROOM_INIT payload:\n{}", root.toPrettyString());
+
+                    // ① ROOM_INIT 에서도 메타 정보(분이 아니라 초 단위 혹은 서버가 주는 키 확인) 읽기
+                    roomId        = root.path("roomId").asText();
+                    totalFocusSec = root.path("focusSec").asInt();
+                    totalBreakSec = root.path("breakSec").asInt();
+                    totalLoops    = root.path("totalLoops").asInt(); // 서버가 "totalLoops" 로 보내주는지 확인!
+                    currentLoop   = root.path("loopIdx").asInt();    // 서버가 보내주지 않으면 1로 초기화
                     initRoom(root);
                     loadChatHistory(root.withArray("chatHistory"));
-                });
+                    });
                 case TIMER_FOCUS_START -> Platform.runLater(() -> {
+                    // ② 포커스 시작 페이즈 + 메타 갱신
                     timerModel.setPhase("FOCUS");
-                    totalFocusSec = root.path("remainingSec").asInt();
+                    totalFocusSec = root.path("focusSec").asInt();
+                    totalBreakSec = root.path("breakSec").asInt();
+                    totalLoops    = root.path("totalLoops").asInt();
+                    currentLoop   = root.path("loopIdx").asInt();
                     updatePhaseUI();
-                });
+                               });
                 case TIMER_BREAK_START -> Platform.runLater(() -> {
+                    // ③ 브레이크 시작 페이즈 + 메타 갱신
                     timerModel.setPhase("BREAK");
-                    totalBreakSec = root.path("remainingSec").asInt();
+                    totalFocusSec = root.path("focusSec").asInt();
+                    totalBreakSec = root.path("breakSec").asInt();
+                    totalLoops    = root.path("totalLoops").asInt();
+                    currentLoop   = root.path("loopIdx").asInt();
                     updatePhaseUI();
-                });
+                               });
                 case TIMER_TICK -> Platform.runLater(() -> {
+                    // ④ 틱마다 서버가 주는 phase(FOCUS/BREAK) 반영
+                    String phaseVal = root.path("phase").asText();
+                    timerModel.setPhase(phaseVal);
+                    phaseLabel.setText(phaseVal.equals("FOCUS") ? "Focus" : "Break");
+
+                    // 남은 시간 업데이트
                     int remaining = root.path("remainingSec").asInt();
                     timerModel.setRemainingSec(remaining);
                     updateTimer(remaining);
-                });
+                               });
                 case CHAT -> Platform.runLater(() -> {
                     addChat(root.path("sender").asText(), root.path("text").asText());
                 });
@@ -115,7 +139,7 @@ public class PomodoroController implements PacketListener {
 
     private void initRoom(JsonNode root) {
         roomId        = root.path("roomId").asText();
-        totalLoops    = root.path("loops").asInt();
+        totalLoops    = root.path("totalLoops").asInt();  // 서버가 "loops" 가 아닌 "totalLoops" 로 보내줄 수 있으니 확인
         currentLoop   = 1;
         totalFocusSec = root.path("focusSec").asInt();
         totalBreakSec = root.path("breakSec").asInt();

@@ -101,3 +101,24 @@ java \
 - 확인 클릭 시 로그아웃 상태로 로그인화면으로 전환
 - 취소 클릭 시 현재 화면으로 전환
    
+**방 만들기**
+
+![](https://velog.velcdn.com/images/hyojin0911/post/edbca7f8-2947-4702-914e-cb5fb22aa2f3/image.png)
+ - 두 번째 Create Study Room 선택 화면
+   - 기본적인 방의 이름(Room Name) 및 기타옵션을 설정
+     - 집중시간(Focus Time) / 쉬는시간(Break Time) / 회차(Loops)
+   - 방의 최대 수용 인원을 설정.
+     - Max Members
+   - 스터디 진행중 중간입장 가능 여부(Mid Entry) / 비밀방 설정(Private Room)
+   - Create 클릭시 다음 대기 화면으로 Scene 전환
+   - Back 클릭시 이전 로비 화면으로 Scene 전환
+
+**대기 화면**
+
+![](https://velog.velcdn.com/images/hyojin0911/post/581df7d8-cbe2-400f-bfa5-97381f08cd55/image.png)
+ - 스터디방 생성 이후 대기방
+   - 방장이 Host가 되어 또 다른 사용자를 기다리는 대기방
+   - 상단 중앙에 방 이름, Private의 여부, 가능한 최대 인원 확인 가능
+   - 방 생성시 설정한 인원대로 입장 가능
+ - 하단에 Start Focus 클릭하면 채팅방으로 이동하며 이와 동시에 Pomodoro Timer가 작동하여 시간 체크가 가능
+

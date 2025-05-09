@@ -13,10 +13,13 @@ javafx sdk 21.0.6 이상
 
 
 다음과 같은 명령어를 입력해서 jar 파일을 실행(단, java sdk 모듈 경로는 본인 컴퓨터 환경에 맞게 지정)
+
    <img width="565" alt="image" src="https://github.com/user-attachments/assets/6b25ff99-991a-4d7f-96bc-37a8b36a4b7c" />
 
+예시)
+
 java \
-—module-path "/Library/Java/Mylib/javafx-sdk-21.0.6/lib" \
+—module-path "/Library/Java/Myli/javafx-sdk-21.0.6/lib" \
 —add-modules javafx.controls,javafx.fxml,javafx.media \
 -jar client-all.jar
 

@@ -71,6 +71,7 @@ java \
 - Change Password 클릭 시 비밀번호 변경 완료
 - Back to the Lobby 클릭 시 로비화면으로 전환
 
+
 **회원탈퇴화면 기능**
 ![스크린샷 2025-05-09 17 35 55](https://github.com/user-attachments/assets/03c4a191-7e34-4483-ae81-c3c32f842c62)
 
@@ -81,6 +82,7 @@ java \
 - 확인 클릭 시 Delete Account 화면으로 전환
 - 자신의 패스워드 입력 후 Delete Account 클릭 시 계정 삭제
 - Cancel 클릭 시 로비화면으로 전환
+
 
 **로그아웃 기능**
 ![스크린샷 2025-05-09 17 39 16](https://github.com/user-attachments/assets/8537d16f-6c3d-4a79-a38b-a036fd4a75de)

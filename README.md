@@ -18,10 +18,10 @@ javafx sdk 21.0.6 이상
 
 **예시)**
 
-java \
-—module-path "/Library/Java/Myli/javafx-sdk-21.0.6/lib" \
-—add-modules javafx.controls,javafx.fxml,javafx.media \
--jar client-all.jar
+java --module-path "/Library/Java/Mylib/javafx-sdk-21.0.6/lib" \
+     --add-modules javafx.controls,javafx.fxml,javafx.media \
+     -jar client-all.jar
+
 
 **<핵심 기능 및 사용 설명서>**
 
